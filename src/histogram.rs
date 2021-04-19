@@ -140,3 +140,40 @@ impl HistWriter {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use yansi::Paint;
+
+    #[test]
+    fn basic_test() {
+        let stats = Stats::new(&[-2.0, 14.0]);
+        let mut hist = Histogram::new(8, 2.5, stats);
+        hist.load(&[
+            -1.0, -1.1, 2.0, 2.0, 2.1, -0.9, 11.0, 11.2, 1.9, 1.99, 1.98, 1.97, 1.96,
+        ]);
+
+        assert_eq!(hist.top, 8);
+        let bucket = &hist.vec[0];
+        assert_eq!(bucket.range, -2.0..0.5);
+        assert_eq!(bucket.count, 3);
+        let bucket = &hist.vec[1];
+        assert_eq!(bucket.count, 8);
+        assert_eq!(bucket.range, 0.5..3.0);
+    }
+
+    #[test]
+    fn display_test() {
+        let stats = Stats::new(&[-2.0, 14.0]);
+        let mut hist = Histogram::new(8, 2.5, stats);
+        hist.load(&[
+            -1.0, -1.1, 2.0, 2.0, 2.1, -0.9, 11.0, 11.2, 1.9, 1.99, 1.98, 1.97, 1.96,
+        ]);
+        Paint::disable();
+        let display = format!("{}", hist);
+        assert!(display.find("[-2.000 ..  0.500] [3] ∎∎∎\n").is_some());
+        assert!(display.find("[ 0.500 ..  3.000] [8] ∎∎∎∎∎∎∎∎\n").is_some());
+        assert!(display.find("[10.500 .. 13.000] [2] ∎∎\n").is_some());
+    }
+}

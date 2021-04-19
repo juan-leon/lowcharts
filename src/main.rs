@@ -102,12 +102,15 @@ fn main() {
             Ok(re) => {
                 builder.regex(re);
             }
-            _ => eprintln!("[{}]: Failed to parse regex {}", Red.paint("ERROR"), string),
+            _ => {
+                eprintln!("[{}]: Failed to parse regex {}", Red.paint("ERROR"), string);
+                std::process::exit(1);
+            }
         };
     }
     let reader = builder.build().unwrap();
 
-    let vec = reader.read(opts.input);
+    let vec = reader.read(&opts.input);
     if vec.is_empty() {
         eprintln!("[{}]: No data", Yellow.paint("WARN"));
         std::process::exit(0);
