@@ -2,7 +2,6 @@ use std::fmt;
 
 use yansi::Color::Blue;
 
-
 #[derive(Debug)]
 pub struct Stats {
     pub min: f64,
@@ -15,7 +14,6 @@ pub struct Stats {
 }
 
 impl Stats {
-
     pub fn new(vec: &[f64]) -> Stats {
         let mut max = vec[0];
         let mut min = max;
@@ -29,7 +27,15 @@ impl Stats {
         }
         let var = temp / vec.len() as f64;
         let std = var.sqrt();
-        Stats { min, max, avg, std, var, sum, samples: vec.len() }
+        Stats {
+            min,
+            max,
+            avg,
+            std,
+            var,
+            sum,
+            samples: vec.len(),
+        }
     }
 }
 
@@ -38,16 +44,16 @@ impl fmt::Display for Stats {
         writeln!(
             f,
             "Samples = {len:.5}; Min = {min:.5}; Max = {max:.5}",
-            len=Blue.paint(self.samples.to_string()),
-            min=Blue.paint(self.min.to_string()),
-            max=Blue.paint(self.max.to_string()),
+            len = Blue.paint(self.samples.to_string()),
+            min = Blue.paint(self.min.to_string()),
+            max = Blue.paint(self.max.to_string()),
         )?;
         writeln!(
             f,
             "Average = {avg:.5}; Variance = {var:.5}; STD = {std:.5}",
-            avg=Blue.paint(self.avg.to_string()),
-            var=Blue.paint(self.var.to_string()),
-            std=Blue.paint(self.std.to_string())
+            avg = Blue.paint(self.avg.to_string()),
+            var = Blue.paint(self.var.to_string()),
+            std = Blue.paint(self.std.to_string())
         )
     }
 }

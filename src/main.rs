@@ -1,38 +1,34 @@
 use std::env;
 
-use yansi::Paint;
-use yansi::Color::Red;
-use yansi::Color::Yellow;
 use clap::{AppSettings, Clap};
 use isatty::stdout_isatty;
 use regex::Regex;
+use yansi::Color::Red;
+use yansi::Color::Yellow;
+use yansi::Paint;
 
 #[macro_use]
 extern crate derive_builder;
 
-
-mod stats;
 mod histogram;
-mod reader;
 mod plot;
+mod reader;
+mod stats;
 
 fn disable_color_if_needed(option: &str) {
     match option {
         "no" => Paint::disable(),
-        "auto" => {
-            match env::var("TERM") {
-                Ok(value) if value == "dumb" => Paint::disable(),
-                _ => {
-                    if !stdout_isatty() {
-                        Paint::disable();
-                    }
+        "auto" => match env::var("TERM") {
+            Ok(value) if value == "dumb" => Paint::disable(),
+            _ => {
+                if !stdout_isatty() {
+                    Paint::disable();
                 }
             }
         },
-        _ => ()
+        _ => (),
     }
 }
-
 
 /// Tool to draw low-resolution graphs in terminal
 #[derive(Clap)]
@@ -68,7 +64,6 @@ struct Opts {
     subcmd: SubCommand,
 }
 
-
 #[derive(Clap)]
 enum SubCommand {
     /// Plot an histogram from input values
@@ -94,23 +89,20 @@ struct Plot {
     height: usize,
 }
 
-
 fn main() {
     let opts: Opts = Opts::parse();
     disable_color_if_needed(&opts.color);
     let mut builder = reader::DataReaderBuilder::default();
     builder.verbose(opts.verbose);
     if opts.min.is_some() || opts.max.is_some() {
-        builder.range(
-            opts.min.unwrap_or(f64::NEG_INFINITY)..opts.max.unwrap_or(f64::INFINITY)
-        );
+        builder.range(opts.min.unwrap_or(f64::NEG_INFINITY)..opts.max.unwrap_or(f64::INFINITY));
     }
     if let Some(string) = opts.regex {
         match Regex::new(&string) {
             Ok(re) => {
                 builder.regex(re);
-            },
-            _ => eprintln!("[{}]: Failed to parse regex {}", Red.paint("ERROR"), string)
+            }
+            _ => eprintln!("[{}]: Failed to parse regex {}", Red.paint("ERROR"), string),
         };
     }
     let reader = builder.build().unwrap();
@@ -127,17 +119,13 @@ fn main() {
             let mut histogram = histogram::Histogram::new(
                 o.intervals,
                 (stats.max - stats.min) / o.intervals as f64,
-                stats
+                stats,
             );
             histogram.load(&vec);
-            println!("{:width$}", histogram, width=opts.width);
-        },
+            println!("{:width$}", histogram, width = opts.width);
+        }
         SubCommand::Plot(o) => {
-            let mut plot = plot::Plot::new(
-                opts.width,
-                o.height,
-                stats
-            );
+            let mut plot = plot::Plot::new(opts.width, o.height, stats);
             plot.load(&vec);
             print!("{}", plot);
         }

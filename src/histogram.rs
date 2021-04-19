@@ -1,10 +1,9 @@
 use std::fmt;
 use std::ops::Range;
 
-use yansi::Color::{Red, Blue, Green};
+use yansi::Color::{Blue, Green, Red};
 
 use crate::stats::Stats;
-
 
 #[derive(Debug)]
 pub struct Bucket {
@@ -14,10 +13,7 @@ pub struct Bucket {
 
 impl Bucket {
     fn new(range: Range<f64>) -> Bucket {
-        Bucket {
-            range,
-            count: 0,
-        }
+        Bucket { range, count: 0 }
     }
 
     fn inc(&mut self) {
@@ -78,7 +74,9 @@ impl Histogram {
 impl fmt::Display for Histogram {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{}", self.stats)?;
-        let writer = HistWriter {width: f.width().unwrap_or(110)};
+        let writer = HistWriter {
+            width: f.width().unwrap_or(110),
+        };
         writer.write(f, &self)
     }
 }
@@ -88,7 +86,6 @@ struct HistWriter {
 }
 
 impl HistWriter {
-
     pub fn write(&self, f: &mut fmt::Formatter, hist: &Histogram) -> fmt::Result {
         let width_range = Self::get_width(hist);
         let width_count = ((hist.top as f64).log10().ceil() as usize).max(1);
@@ -105,27 +102,33 @@ impl HistWriter {
         Ok(())
     }
 
-
-    fn write_bucket(&self, f: &mut fmt::Formatter, bucket: &Bucket, divisor: usize, width: usize, width_count: usize) -> fmt::Result {
-        let bar = Red.paint(format!("{:∎<width$}", "", width=bucket.count / divisor));
+    fn write_bucket(
+        &self,
+        f: &mut fmt::Formatter,
+        bucket: &Bucket,
+        divisor: usize,
+        width: usize,
+        width_count: usize,
+    ) -> fmt::Result {
+        let bar = Red.paint(format!("{:∎<width$}", "", width = bucket.count / divisor));
         writeln!(
             f,
             "[{range}] [{count}] {bar}",
-            range=Blue.paint(
-                format!(
-                    "{:width$.3} .. {:width$.3}",
-                    bucket.range.start,
-                    bucket.range.end,
-                    width = width,
-                )
-            ),
-            count=Green.paint(format!("{:width$}", bucket.count, width=width_count)),
-            bar=bar
+            range = Blue.paint(format!(
+                "{:width$.3} .. {:width$.3}",
+                bucket.range.start,
+                bucket.range.end,
+                width = width,
+            )),
+            count = Green.paint(format!("{:width$}", bucket.count, width = width_count)),
+            bar = bar
         )
     }
 
     fn get_width(hist: &Histogram) -> usize {
-        format!("{:.3}", hist.stats.min).len().max(format!("{:.3}", hist.max).len())
+        format!("{:.3}", hist.stats.min)
+            .len()
+            .max(format!("{:.3}", hist.max).len())
     }
 
     fn get_max_bar_len(&self, fixed_width: usize) -> usize {

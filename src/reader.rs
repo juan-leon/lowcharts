@@ -1,10 +1,9 @@
-use std::io::{self, BufRead};
 use std::fs::File;
+use std::io::{self, BufRead};
 use std::ops::Range;
 
 use regex::Regex;
-use yansi::Color::{Red, Magenta};
-
+use yansi::Color::{Magenta, Red};
 
 #[derive(Debug, Default, Builder)]
 pub struct DataReader {
@@ -16,10 +15,7 @@ pub struct DataReader {
     verbose: bool,
 }
 
-
-
 impl DataReader {
-
     pub fn read(&self, path: String) -> Vec<f64> {
         let mut vec: Vec<f64> = vec![];
         match path.as_str() {
@@ -43,18 +39,22 @@ impl DataReader {
         let mut vec: Vec<f64> = Vec::new();
         let line_parser = match self.regex {
             Some(_) => Self::parse_regex,
-            None => Self::parse_float
+            None => Self::parse_float,
         };
         for line in lines {
             match line {
-                Ok(as_string) => if let Some(n) = line_parser(&self, &as_string) {
-                    match &self.range {
-                        Some(range) => if range.contains(&n) {
-                            vec.push(n);
-                        },
-                        _ => vec.push(n)
+                Ok(as_string) => {
+                    if let Some(n) = line_parser(&self, &as_string) {
+                        match &self.range {
+                            Some(range) => {
+                                if range.contains(&n) {
+                                    vec.push(n);
+                                }
+                            }
+                            _ => vec.push(n),
+                        }
                     }
-                },
+                }
                 Err(error) => eprintln!("[{}]: {}", Red.paint("ERROR"), error),
             }
         }
@@ -86,7 +86,7 @@ impl DataReader {
                 } else {
                     None
                 }
-            },
+            }
             None => {
                 if self.verbose {
                     eprintln!(

@@ -1,10 +1,9 @@
 use std::fmt;
 use std::ops::Range;
 
-use yansi::Color::{Red, Blue};
+use yansi::Color::{Blue, Red};
 
 use crate::stats::Stats;
-
 
 #[derive(Debug)]
 pub struct Plot {
@@ -56,23 +55,27 @@ impl fmt::Display for Plot {
     }
 }
 
-fn print_line(f: &mut fmt::Formatter, x_axis: &[f64], range: Range<f64>, y_width: usize) -> fmt::Result {
-    let mut row = format!("{: <width$}", "", width=x_axis.len());
+fn print_line(
+    f: &mut fmt::Formatter,
+    x_axis: &[f64],
+    range: Range<f64>,
+    y_width: usize,
+) -> fmt::Result {
+    let mut row = format!("{: <width$}", "", width = x_axis.len());
     // The reverse in the enumeration is to avoid breaking char boundaries
     // because of unicode char ● having more bytes than ascii chars.
     for (x, value) in x_axis.iter().enumerate().rev() {
         if range.contains(value) {
-            row.replace_range(x..x+1, "●".as_ref());
+            row.replace_range(x..x + 1, "●".as_ref());
         }
     }
     writeln!(
         f,
         "[{}] {}",
-        Blue.paint(format!("{y:.*}", y_width, y=range.start.to_string())),
+        Blue.paint(format!("{y:.*}", y_width, y = range.start.to_string())),
         Red.paint(row),
     )
 }
-
 
 #[cfg(test)]
 mod tests {
