@@ -65,12 +65,14 @@ impl DataReader {
         match line.parse::<f64>() {
             Ok(n) => Some(n),
             Err(parse_error) => {
-                eprintln!(
-                    "[{}] Cannot parse float ({}) at '{}'",
-                    Red.paint("ERROR"),
-                    parse_error,
-                    line
-                );
+                if self.verbose {
+                    eprintln!(
+                        "[{}] Cannot parse float ({}) at '{}'",
+                        Red.paint("ERROR"),
+                        parse_error,
+                        line
+                    );
+                }
                 None
             }
         }

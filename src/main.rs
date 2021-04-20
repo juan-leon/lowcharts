@@ -1,6 +1,6 @@
+use clap::ArgMatches;
 use std::env;
 
-use clap::{AppSettings, Clap};
 use isatty::stdout_isatty;
 use regex::Regex;
 use yansi::Color::Red;
@@ -14,6 +14,7 @@ mod histogram;
 mod plot;
 mod reader;
 mod stats;
+mod app;
 
 fn disable_color_if_needed(option: &str) {
     match option {
@@ -30,74 +31,19 @@ fn disable_color_if_needed(option: &str) {
     }
 }
 
-/// Tool to draw low-resolution graphs in terminal
-#[derive(Clap)]
-#[clap(setting = AppSettings::ColoredHelp)]
-struct Opts {
-    /// Input file.  If not present or a single dash, standard input will be used.
-    #[clap(default_value = "-")]
-    input: String,
-    /// Filter out values bigger than this
-    #[clap(long)]
-    max: Option<f64>,
-    /// Filter out values smaller than this
-    #[clap(long)]
-    min: Option<f64>,
-    /// Use colors in the output.  Auto means "yes if tty with TERM != dumb and
-    /// no redirects".
-    #[clap(short, long, default_value = "auto", possible_values = &["auto", "no", "yes"])]
-    color: String,
-    /// Use this many characters as terminal width
-    #[clap(long, default_value = "110")]
-    width: usize,
-    /// Use a regex to capture input values.  By default this will use a capture
-    /// group named "value".  If not present, it will use first capture group.
-    /// If not present, a number per line is expected.  Examples of regex are '
-    /// 200 \d+ ([0-9.]+)' (1 anonymous capture group) or 'a(a)?
-    /// (?P<value>[0-9.]+)' (a named capture group).
-    #[clap(long)]
-    regex: Option<String>,
-    #[clap(long)]
-    /// Be more verbose
-    verbose: bool,
-    #[clap(subcommand)]
-    subcmd: SubCommand,
-}
-
-#[derive(Clap)]
-enum SubCommand {
-    /// Plot an histogram from input values
-    Hist(Hist),
-    /// Plot an 2d plot where y-values are averages of input values (as many
-    /// averages as wide is the plot)
-    Plot(Plot),
-}
-
-#[derive(Clap)]
-#[clap(setting = AppSettings::ColoredHelp)]
-struct Hist {
-    /// Use that many intervals
-    #[clap(long, default_value = "20")]
-    intervals: usize,
-}
-
-#[derive(Clap)]
-#[clap(setting = AppSettings::ColoredHelp)]
-struct Plot {
-    /// Use that many rows for the plot
-    #[clap(long, default_value = "40")]
-    height: usize,
-}
-
-fn main() {
-    let opts: Opts = Opts::parse();
-    disable_color_if_needed(&opts.color);
+fn get_reader(matches: &ArgMatches, verbose: bool) -> reader::DataReader {
     let mut builder = reader::DataReaderBuilder::default();
-    builder.verbose(opts.verbose);
-    if opts.min.is_some() || opts.max.is_some() {
-        builder.range(opts.min.unwrap_or(f64::NEG_INFINITY)..opts.max.unwrap_or(f64::INFINITY));
+    builder.verbose(verbose);
+    if matches.is_present("min") || matches.is_present("max") {
+        let min = matches.value_of_t("min").unwrap_or(f64::NEG_INFINITY);
+        let max = matches.value_of_t("max").unwrap_or(f64::INFINITY);
+        if min > max {
+            eprintln!("[{}] Minimum should be smaller than maximum", Red.paint("ERROR"));
+            std::process::exit(1);
+        }
+        builder.range(min..max);
     }
-    if let Some(string) = opts.regex {
+    if let Some(string) = matches.value_of("regex") {
         match Regex::new(&string) {
             Ok(re) => {
                 builder.regex(re);
@@ -108,29 +54,54 @@ fn main() {
             }
         };
     }
-    let reader = builder.build().unwrap();
+    builder.build().unwrap()
+}
 
-    let vec = reader.read(&opts.input);
-    if vec.is_empty() {
-        eprintln!("[{}]: No data", Yellow.paint("WARN"));
-        std::process::exit(0);
+
+fn main() {
+    let matches = app::get_app().get_matches();
+
+    if let Some(c) = matches.value_of("color") {
+        disable_color_if_needed(c);
     }
 
+    let sub_matches = match matches.subcommand_name() {
+        Some("hist") => {
+            matches.subcommand_matches("hist").unwrap()
+        },
+        Some("plot") => {
+            matches.subcommand_matches("plot").unwrap()
+        },
+        _ => {
+            eprintln!("[{}] Invalid subcommand", Red.paint("ERROR"));
+            std::process::exit(1);
+        }
+    };
+    let reader = get_reader(&sub_matches, matches.is_present("verbose"));
+
+    let vec = reader.read(sub_matches.value_of("input").unwrap_or("-"));
+    if vec.is_empty() {
+        eprintln!("[{}]: No data to process", Yellow.paint("WARN"));
+        std::process::exit(0);
+    }
     let stats = stats::Stats::new(&vec);
-    match opts.subcmd {
-        SubCommand::Hist(o) => {
+    let width = sub_matches.value_of_t("width").unwrap();
+    match matches.subcommand_name() {
+        Some("hist") => {
+            let intervals = sub_matches.value_of_t("intervals").unwrap();
             let mut histogram = histogram::Histogram::new(
-                o.intervals,
-                (stats.max - stats.min) / o.intervals as f64,
+                intervals,
+                (stats.max - stats.min) / intervals as f64,
                 stats,
             );
             histogram.load(&vec);
-            println!("{:width$}", histogram, width = opts.width);
-        }
-        SubCommand::Plot(o) => {
-            let mut plot = plot::Plot::new(opts.width, o.height, stats);
+            println!("{:width$}", histogram, width = width);
+        },
+        Some("plot") => {
+            let mut plot = plot::Plot::new(width, sub_matches.value_of_t("height").unwrap(), stats);
             plot.load(&vec);
             print!("{}", plot);
-        }
-    }
+        },
+        _ => ()
+    };
 }
