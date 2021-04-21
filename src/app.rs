@@ -1,6 +1,5 @@
 use clap::{self, App, Arg, AppSettings};
 
-// fn add_common_options<'a> (app: App<'a>) -> App<'a> {
 fn add_common_options (app: App) -> App {
 
     const LONG_RE_ABOUT: &str = "\
