@@ -88,7 +88,8 @@ fn main() {
     let width = sub_matches.value_of_t("width").unwrap();
     match matches.subcommand_name() {
         Some("hist") => {
-            let intervals = sub_matches.value_of_t("intervals").unwrap();
+            let mut intervals: usize = sub_matches.value_of_t("intervals").unwrap();
+            intervals = intervals.min(vec.len());
             let mut histogram = histogram::Histogram::new(
                 intervals,
                 (stats.max - stats.min) / intervals as f64,

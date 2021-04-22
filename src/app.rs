@@ -67,7 +67,7 @@ pub fn get_app() -> App<'static> {
             Arg::new("intervals")
                 .long("intervals")
                 .short('i')
-                .about("Use that many buckets to classify data")
+                .about("Use no more than this amount of buckets to classify data")
                 .default_value("20")
                 .takes_value(true)
         );
