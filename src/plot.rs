@@ -104,9 +104,9 @@ mod tests {
         plot.load(&[-1.0, 0.0, 1.0, 2.0, 3.0, 4.0, -1.0]);
         Paint::disable();
         let display = format!("{}", plot);
-        assert!(display.find("[3]   ● ").is_some());
-        assert!(display.find("[2]     ").is_some());
-        assert!(display.find("[1]  ●  ").is_some());
-        assert!(display.find("[-1] ●  ●").is_some());
+        assert!(display.contains("[3]   ● "));
+        assert!(display.contains("[2]     "));
+        assert!(display.contains("[1]  ●  "));
+        assert!(display.contains("[-1] ●  ●"));
     }
 }

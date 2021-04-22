@@ -6,7 +6,7 @@ use yansi::Color::{Blue, Green, Red};
 use crate::stats::Stats;
 
 #[derive(Debug)]
-pub struct Bucket {
+struct Bucket {
     range: Range<f64>,
     count: usize,
 }
@@ -33,20 +33,20 @@ pub struct Histogram {
 
 impl Histogram {
     pub fn new(size: usize, step: f64, stats: Stats) -> Histogram {
-        let mut b = Histogram {
-            vec: Vec::with_capacity(size),
+        let mut vec = Vec::<Bucket>::with_capacity(size);
+        let mut lower = stats.min;
+        for _ in 0..size {
+            vec.push(Bucket::new(lower..lower + step));
+            lower += step;
+        }
+        Histogram {
+            vec,
             max: stats.min + (step * size as f64),
             step,
             top: 0,
             last: size - 1,
             stats,
-        };
-        let mut lower = b.stats.min;
-        for _ in 0..size {
-            b.vec.push(Bucket::new(lower..lower + step));
-            lower += step;
         }
-        b
     }
 
     pub fn load(&mut self, vec: &[f64]) {
@@ -110,7 +110,6 @@ impl HistWriter {
         width: usize,
         width_count: usize,
     ) -> fmt::Result {
-        let bar = Red.paint(format!("{:∎<width$}", "", width = bucket.count / divisor));
         writeln!(
             f,
             "[{range}] [{count}] {bar}",
@@ -121,7 +120,7 @@ impl HistWriter {
                 width = width,
             )),
             count = Green.paint(format!("{:width$}", bucket.count, width = width_count)),
-            bar = bar
+            bar = Red.paint(format!("{:∎<width$}", "", width = bucket.count / divisor)),
         )
     }
 
@@ -172,8 +171,8 @@ mod tests {
         ]);
         Paint::disable();
         let display = format!("{}", hist);
-        assert!(display.find("[-2.000 ..  0.500] [3] ∎∎∎\n").is_some());
-        assert!(display.find("[ 0.500 ..  3.000] [8] ∎∎∎∎∎∎∎∎\n").is_some());
-        assert!(display.find("[10.500 .. 13.000] [2] ∎∎\n").is_some());
+        assert!(display.contains("[-2.000 ..  0.500] [3] ∎∎∎\n"));
+        assert!(display.contains("[ 0.500 ..  3.000] [8] ∎∎∎∎∎∎∎∎\n"));
+        assert!(display.contains("[10.500 .. 13.000] [2] ∎∎\n"));
     }
 }

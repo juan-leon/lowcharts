@@ -81,9 +81,9 @@ mod tests {
         let stats = Stats::new(&[1.1, 3.3, 2.2]);
         Paint::disable();
         let display = format!("{}", stats);
-        assert!(display.find("Samples = 3").is_some());
-        assert!(display.find("Min = 1.1").is_some());
-        assert!(display.find("Max = 3.3").is_some());
-        assert!(display.find("Average = 2.2").is_some());
+        assert!(display.contains("Samples = 3"));
+        assert!(display.contains("Min = 1.1"));
+        assert!(display.contains("Max = 3.3"));
+        assert!(display.contains("Average = 2.2"));
     }
 }

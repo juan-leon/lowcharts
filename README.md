@@ -20,15 +20,21 @@ terminal.
 Type `lowcharts --help`, or `lowcharts PLOT-TYPE --help` for a complete list of
 options.
 
-[![Sample histogram with lowcharts](resources/histogram-example.png)](resources/histogram-example.png)
+Currently three basic types of plots are supported:
 
-Currently two basic types of plots are supported:
+#### Bar chart for matches in the input
+
+Since `grep -c` does not aggregate counts per pattern, this is maybe my most frequent use case.
+
+This chart is generated using `lowcharts matches database.log SELECT UPDATE DELETE INSERT DROP`:
+
+[![Simple bar chart with lowcharts](resources/matches-example.png)](resources/matches-example.png)
 
 #### Histogram
 
 This chart is generated using `python3 -c 'import random; [print(random.normalvariate(5, 5)) for _ in range(100000)]' | lowcharts hist`:
 
-
+[![Sample histogram with lowcharts](resources/histogram-example.png)](resources/histogram-example.png)
 
 This was inspired by [data-hacks](https://github.com/bitly/data_hacks).
 However, for some big log files I found that project was slower of what I would

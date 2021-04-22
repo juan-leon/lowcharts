@@ -1,9 +1,11 @@
 use std::fs::File;
-use std::io::{self, BufRead};
+use std::io::{self, BufRead, BufReader};
 use std::ops::Range;
 
 use regex::Regex;
 use yansi::Color::{Magenta, Red};
+
+use crate::matchbar::{MatchBar, MatchBarRow};
 
 #[derive(Debug, Default, Builder)]
 pub struct DataReader {
@@ -17,31 +19,12 @@ pub struct DataReader {
 
 impl DataReader {
     pub fn read(&self, path: &str) -> Vec<f64> {
-        let mut vec: Vec<f64> = vec![];
-        match path {
-            "-" => {
-                vec = self.read_data(io::stdin().lock().lines());
-            }
-            _ => {
-                let file = File::open(path);
-                match file {
-                    Ok(fd) => {
-                        vec = self.read_data(io::BufReader::new(fd).lines());
-                    }
-                    Err(error) => eprintln!("[{}]: {}", Red.paint("ERROR"), error),
-                }
-            }
-        }
-        vec
-    }
-
-    fn read_data<T: BufRead>(&self, lines: std::io::Lines<T>) -> Vec<f64> {
         let mut vec: Vec<f64> = Vec::new();
         let line_parser = match self.regex {
             Some(_) => Self::parse_regex,
             None => Self::parse_float,
         };
-        for line in lines {
+        for line in open_file(path).lines() {
             match line {
                 Ok(as_string) => {
                     if let Some(n) = line_parser(&self, &as_string) {
@@ -100,6 +83,42 @@ impl DataReader {
                 None
             }
         }
+    }
+
+    pub fn read_matches(&self, path: &str, strings: Vec<&str>) -> MatchBar {
+        let mut rows = Vec::<MatchBarRow>::with_capacity(strings.len());
+        for s in strings {
+            rows.push(MatchBarRow::new(s));
+        }
+        for line in open_file(path).lines() {
+            match line {
+                Ok(as_string) => {
+                    for row in rows.iter_mut() {
+                        row.inc_if_matches(&as_string);
+                    }
+                }
+                Err(error) => eprintln!("[{}]: {}", Red.paint("ERROR"), error),
+            }
+        }
+        MatchBar::new(rows)
+    }
+}
+
+fn open_file(path: &str) -> Box<dyn io::BufRead> {
+    match path {
+        "-" => Box::new(BufReader::new(io::stdin())),
+        _ => match File::open(path) {
+            Ok(fd) => Box::new(io::BufReader::new(fd)),
+            Err(error) => {
+                eprintln!(
+                    "[{}] Could not open {}: {}",
+                    Red.paint("ERROR"),
+                    path,
+                    error
+                );
+                std::process::exit(0);
+            }
+        },
     }
 }
 
@@ -190,6 +209,31 @@ mod tests {
                 writeln!(file, "0.5").unwrap();
                 let vec = reader.read(file.path().to_str().unwrap());
                 assert_eq!(vec, [-0.5, 0.5]);
+            }
+            Err(_) => assert!(false, "Could not create temp file"),
+        }
+    }
+
+    #[test]
+    fn basic_match_reader() {
+        let reader = DataReader::default();
+        match NamedTempFile::new() {
+            Ok(ref mut file) => {
+                writeln!(file, "foobar").unwrap();
+                writeln!(file, "data data foobar").unwrap();
+                writeln!(file, "data data").unwrap();
+                writeln!(file, "foobar").unwrap();
+                writeln!(file, "none").unwrap();
+                let mb = reader.read_matches(
+                    file.path().to_str().unwrap(),
+                    vec!["random", "foobar", "data"],
+                );
+                assert_eq!(mb.vec[0].label, "random");
+                assert_eq!(mb.vec[0].count, 0);
+                assert_eq!(mb.vec[1].label, "foobar");
+                assert_eq!(mb.vec[1].count, 3);
+                assert_eq!(mb.vec[2].label, "data");
+                assert_eq!(mb.vec[2].count, 2);
             }
             Err(_) => assert!(false, "Could not create temp file"),
         }
