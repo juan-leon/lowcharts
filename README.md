@@ -95,8 +95,14 @@ of a metric over time, but not the speed of that evolution.
 
 There is regex support for this type of plots.
 
+### Installing
 
-### Building
+#### Via release
+
+Go over https://github.com/juan-leon/lowcharts/releases/ and download the binary
+you want.  Decompress the file and copy the binary to your path.
+
+#### Via local compilation
 
 ```
 $ git clone https://github.com/juan-leon/lowcharts
