@@ -7,8 +7,11 @@ jobs:
     - os: linux
       rust: stable
       env: TARGET=x86_64-unknown-linux-musl
+    - os: linux
+      rust: stable
+      env: TARGET=arm-unknown-linux-gnueabihf
     - os: osx
-      osx_image: xcode11.4 # Catalina
+      osx_image: xcode11.4
       rust: stable
       env: TARGET=x86_64-apple-darwin
 
