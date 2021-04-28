@@ -14,8 +14,6 @@ jobs:
 
 env:
   global:
-    # Default target on travis-ci.
-    - HOST=x86_64-unknown-linux-gnu
     # Used on the deployment script
     - PROJECT_NAME=lowcharts
 
@@ -33,8 +31,7 @@ deploy:
     tags: true
 
 install:
-  # prevent target re-add error from rustup
-  - if [[ $TRAVIS_OS_NAME = linux && $HOST != $TARGET ]]; then rustup target add $TARGET; fi
+  - rustup target add $TARGET
 
 notifications:
   email:
