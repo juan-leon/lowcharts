@@ -3,25 +3,13 @@
 set -ex
 
 function pack {
-    local tempdir pwd package_name
-
-    tempdir=$(mktemp -d 2>/dev/null || mktemp -d -t tmp)
-    pwd=$(pwd)
+    local package_name dir_name
     package_name="$PROJECT_NAME-$TRAVIS_TAG-$TARGET"
-    echo "fixme pwd is $pwd"
-    echo "fixme package_name is $package_name"
+    dir_name="target/$TARGET/release"
 
-    mkdir -p "$tempdir/$package_name"
-
-    cp "target/$TARGET/release/$PROJECT_NAME" "$tempdir/$package_name/"
-    strip "$tempdir/$package_name/$PROJECT_NAME"
-
-    pushd "$tempdir"
-    tar cvzf "$pwd/$package_name.tar.gz" "$package_name"/*
-    popd
-    rm -r "$tempdir"
+    strip "$dir_name/$PROJECT_NAME"
+    tar -C "$dir_name" -cvzf "$package_name.tar.gz" "$PROJECT_NAME"
 }
 
 cargo build --target "$TARGET" --release --verbose
 pack
-ls -l  # fixme
