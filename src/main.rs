@@ -10,11 +10,13 @@ use yansi::Paint;
 extern crate derive_builder;
 
 mod app;
+mod dateparser;
 mod histogram;
 mod matchbar;
 mod plot;
 mod reader;
 mod stats;
+mod timehist;
 
 fn disable_color_if_needed(option: &str) {
     match option {
@@ -107,6 +109,35 @@ fn matchbar(matches: &ArgMatches) {
     );
 }
 
+fn timehist(matches: &ArgMatches) {
+    let mut builder = reader::TimeReaderBuilder::default();
+    if let Some(string) = matches.value_of("regex") {
+        match Regex::new(&string) {
+            Ok(re) => {
+                builder.regex(re);
+            }
+            _ => {
+                eprintln!("[{}]: Failed to parse regex {}", Red.paint("ERROR"), string);
+                std::process::exit(1);
+            }
+        };
+    }
+    if let Some(as_str) = matches.value_of("format") {
+        builder.ts_format(as_str.to_string());
+    }
+    let width = matches.value_of_t("width").unwrap();
+    let reader = builder.build().unwrap();
+    let vec = reader.read(matches.value_of("input").unwrap());
+    if vec.len() <= 1 {
+        eprintln!("[{}] Not enough data to process", Yellow.paint("WARN"));
+        std::process::exit(0);
+    }
+    let mut timehist = timehist::TimeHistogram::new(matches.value_of_t("intervals").unwrap(), &vec);
+    timehist.load(&vec);
+
+    print!("{:width$}", timehist, width = width);
+}
+
 fn main() {
     let matches = app::get_app().get_matches();
     let verbose = matches.is_present("verbose");
@@ -122,6 +153,9 @@ fn main() {
         }
         Some(("matches", subcommand_matches)) => {
             matchbar(subcommand_matches);
+        }
+        Some(("timehist", subcommand_matches)) => {
+            timehist(subcommand_matches);
         }
         _ => unreachable!("Invalid subcommand"),
     };

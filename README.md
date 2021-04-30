@@ -20,7 +20,7 @@ terminal.
 Type `lowcharts --help`, or `lowcharts PLOT-TYPE --help` for a complete list of
 options.
 
-Currently three basic types of plots are supported:
+Currently four basic types of plots are supported:
 
 #### Bar chart for matches in the input
 
@@ -94,6 +94,34 @@ words: grouping data by time is not (yet?) supported; you can see the evolution
 of a metric over time, but not the speed of that evolution.
 
 There is regex support for this type of plots.
+
+#### Time Histogram
+
+This chart is generated using  `strace -tt ls -lR * 2>&1 | lowcharts timehist --intervals 10`:
+
+[![Sample plot with lowcharts](resources/timehist-example.png)](resources/timehist-example.png)
+
+Things like `lowcharts timehist --regex ' 404 ' nginx.log` should work in a
+similar way, and would give you a glimpse of when and how many 404s are being
+triggered in your server.
+
+The idea is to depict the frequency of logs that match a regex (by default any
+log that is read by the tool).  The sub-command can autodetect the more common
+(in my personal and biased experience) datetime/timestamp formats: rfc 3339, rfc
+2822, python `%(asctime)s`, golang default log format, nginx, rabbitmq, strace
+-t (or -tt, or -ttt),ltrace,... as long as the timestamp is present in the first
+line in the log and the format is consistent in all the lines that contain
+timestamp.  It is ok to have lines with no timestamp.  The consistency is
+required because of performance reasons: the 1st log line is the only one that
+triggers the heuristics needed to create an specialized datetime parser on the
+fly.
+
+However, if you have a format that lowcharts cannot autodetected, you can
+specify it via command line flag.  For instance, `--format
+'%d-%b-%Y::%H:%M:%S'`.  Note that, as of today, you need to leave out the
+timezone part of the format string (the autodetection works fine with
+timezones).
+
 
 ### Installing
 
