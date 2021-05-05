@@ -336,7 +336,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore] // need to make code LocalTime agnostic
     fn time_reader_with_format() {
         let mut builder = TimeReaderBuilder::default();
         builder.ts_format(String::from("%Y_%m_%d %H:%M"));
@@ -352,11 +351,11 @@ mod tests {
                 assert_eq!(ts.len(), 4);
                 assert_eq!(
                     ts[0],
-                    DateTime::parse_from_rfc3339("2021-04-15T04:25:00+00:00").unwrap()
+                    DateTime::parse_from_rfc3339("2021-04-15T06:25:00+00:00").unwrap()
                 );
                 assert_eq!(
                     ts[3],
-                    DateTime::parse_from_rfc3339("2021-04-15T04:28:00+00:00").unwrap()
+                    DateTime::parse_from_rfc3339("2021-04-15T06:28:00+00:00").unwrap()
                 );
             }
             Err(_) => assert!(false, "Could not create temp file"),

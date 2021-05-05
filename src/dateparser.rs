@@ -1,6 +1,6 @@
 use std::ops::Range;
 
-use chrono::{DateTime, FixedOffset, Local, NaiveDateTime, NaiveTime, ParseError, TimeZone, Utc};
+use chrono::{DateTime, FixedOffset, Utc, NaiveDateTime, NaiveTime, ParseError, TimeZone};
 use regex::Regex;
 
 type DateParsingFun = fn(s: &str) -> Result<DateTime<FixedOffset>, ParseError>;
@@ -69,7 +69,7 @@ impl<'a> LogDateParser<'a> {
             Some(p) => p(&s[range]),
             None => match NaiveDateTime::parse_from_str(&s[range], self.ts_format.unwrap()) {
                 Ok(naive) => {
-                    let date_time: DateTime<Local> = Local.from_local_datetime(&naive).unwrap();
+                    let date_time: DateTime<Utc> = Utc.from_local_datetime(&naive).unwrap();
                     Ok(date_time.with_timezone(&TimeZone::from_offset(&FixedOffset::west(0))))
                 }
                 Err(err) => Err(err),
@@ -100,7 +100,7 @@ impl<'a> LogDateParser<'a> {
                 match string[..dot].parse::<i64>() {
                     Ok(secs) => {
                         let naive = NaiveDateTime::from_timestamp(secs, nanosecs);
-                        let date_time: DateTime<Local> = Local.from_local_datetime(&naive).unwrap();
+                        let date_time: DateTime<Utc> = Utc.from_local_datetime(&naive).unwrap();
                         Ok(date_time.with_timezone(&TimeZone::from_offset(&FixedOffset::west(0))))
                     }
                     Err(_) => DateTime::parse_from_rfc3339(""),
@@ -114,7 +114,7 @@ impl<'a> LogDateParser<'a> {
             Some(
                 |string: &str| match NaiveDateTime::parse_from_str(string, PARSE_SPECIFIERS[0]) {
                     Ok(naive) => {
-                        let date_time: DateTime<Local> = Local.from_local_datetime(&naive).unwrap();
+                        let date_time: DateTime<Utc> = Utc.from_local_datetime(&naive).unwrap();
                         Ok(date_time.with_timezone(&TimeZone::from_offset(&FixedOffset::west(0))))
                     }
                     Err(err) => Err(err),
@@ -124,7 +124,7 @@ impl<'a> LogDateParser<'a> {
             Some(
                 |string: &str| match NaiveDateTime::parse_from_str(string, PARSE_SPECIFIERS[1]) {
                     Ok(naive) => {
-                        let date_time: DateTime<Local> = Local.from_local_datetime(&naive).unwrap();
+                        let date_time: DateTime<Utc> = Utc.from_local_datetime(&naive).unwrap();
                         Ok(date_time.with_timezone(&TimeZone::from_offset(&FixedOffset::west(0))))
                     }
                     Err(err) => Err(err),
@@ -134,7 +134,7 @@ impl<'a> LogDateParser<'a> {
             Some(
                 |string: &str| match NaiveDateTime::parse_from_str(string, PARSE_SPECIFIERS[2]) {
                     Ok(naive) => {
-                        let date_time: DateTime<Local> = Local.from_local_datetime(&naive).unwrap();
+                        let date_time: DateTime<Utc> = Utc.from_local_datetime(&naive).unwrap();
                         Ok(date_time.with_timezone(&TimeZone::from_offset(&FixedOffset::west(0))))
                     }
                     Err(err) => Err(err),
@@ -144,7 +144,7 @@ impl<'a> LogDateParser<'a> {
             Some(
                 |string: &str| match NaiveDateTime::parse_from_str(string, PARSE_SPECIFIERS[3]) {
                     Ok(naive) => {
-                        let date_time: DateTime<Local> = Local.from_local_datetime(&naive).unwrap();
+                        let date_time: DateTime<Utc> = Utc.from_local_datetime(&naive).unwrap();
                         Ok(date_time.with_timezone(&TimeZone::from_offset(&FixedOffset::west(0))))
                     }
                     Err(err) => Err(err),
@@ -289,42 +289,40 @@ mod tests {
     }
 
     #[test]
-    #[ignore] // need to make code LocalTime agnostic
     fn test_timestamps() {
         let r = LogDateParser::new_with_guess("ts 1619688527.018165").unwrap();
         assert_eq!(
             r.parse("ts 1619655527.888165"),
-            DateTime::parse_from_rfc3339("2021-04-28T22:18:47.888165+00:00")
+            DateTime::parse_from_rfc3339("2021-04-29T00:18:47.888165+00:00")
         );
         let r = LogDateParser::new_with_guess("1619688527.123").unwrap();
         assert_eq!(
             r.parse("1619655527.123"),
-            DateTime::parse_from_rfc3339("2021-04-28T22:18:47.123+00:00")
+            DateTime::parse_from_rfc3339("2021-04-29T00:18:47.123+00:00")
         );
     }
 
     #[test]
-    #[ignore] // need to make code LocalTime agnostic
     fn test_known_formats() {
         let r = LogDateParser::new_with_guess("2021-04-28 06:25:24,321").unwrap();
         assert_eq!(
             r.parse("2021-04-28 06:25:24,321"),
-            DateTime::parse_from_rfc3339("2021-04-28T04:25:24.321+00:00")
+            DateTime::parse_from_rfc3339("2021-04-28T06:25:24.321+00:00")
         );
         let r = LogDateParser::new_with_guess("2021-04-28 06:25:24").unwrap();
         assert_eq!(
             r.parse("2021-04-28 06:25:24"),
-            DateTime::parse_from_rfc3339("2021-04-28T04:25:24+00:00")
+            DateTime::parse_from_rfc3339("2021-04-28T06:25:24+00:00")
         );
         let r = LogDateParser::new_with_guess("28-Apr-2021::12:10:42").unwrap();
         assert_eq!(
             r.parse("28-Apr-2021::12:10:42"),
-            DateTime::parse_from_rfc3339("2021-04-28T10:10:42+00:00")
+            DateTime::parse_from_rfc3339("2021-04-28T12:10:42+00:00")
         );
         let r = LogDateParser::new_with_guess("2019/12/19 05:01:02").unwrap();
         assert_eq!(
             r.parse("2019/12/19 05:01:02"),
-            DateTime::parse_from_rfc3339("2019-12-19T04:01:02+00:00")
+            DateTime::parse_from_rfc3339("2019-12-19T05:01:02+00:00")
         );
         let r = LogDateParser::new_with_guess("11:29:13.120535").unwrap();
         let now_as_date = format!("{}", Utc::today());
@@ -350,7 +348,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore] // need to make code LocalTime agnostic
     fn test_custom_format() {
         assert!(LogDateParser::new_with_format(
             "[1996-12-19T16:39:57-08:00] foobar",
@@ -361,7 +358,7 @@ mod tests {
             .unwrap();
         assert_eq!(
             r.parse("[2096-11-19 04-25-24]"),
-            DateTime::parse_from_rfc3339("2096-11-19T03:25:24+00:00")
+            DateTime::parse_from_rfc3339("2096-11-19T04:25:24+00:00")
         );
     }
 }
