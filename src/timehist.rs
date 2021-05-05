@@ -35,8 +35,8 @@ pub struct TimeHistogram {
 impl TimeHistogram {
     pub fn new(size: usize, ts: &[DateTime<FixedOffset>]) -> TimeHistogram {
         let mut vec = Vec::<TimeBucket>::with_capacity(size);
-        let min = ts.iter().min().unwrap().clone();
-        let max = ts.iter().max().unwrap().clone();
+        let min = *ts.iter().min().unwrap();
+        let max = *ts.iter().max().unwrap();
         let step = max - min;
         let inc = step / size as i32;
         for i in 0..size {
