@@ -1,6 +1,6 @@
 use std::ops::Range;
 
-use chrono::{DateTime, FixedOffset, Utc, NaiveDateTime, NaiveTime, ParseError, TimeZone};
+use chrono::{DateTime, FixedOffset, NaiveDateTime, NaiveTime, ParseError, TimeZone, Utc};
 use regex::Regex;
 
 type DateParsingFun = fn(s: &str) -> Result<DateTime<FixedOffset>, ParseError>;
