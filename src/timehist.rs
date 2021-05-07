@@ -106,13 +106,6 @@ impl fmt::Display for TimeHistogram {
         )?;
         let fmt = self.date_fmt_string();
         for row in self.vec.iter() {
-            // println!("ROW");
-            // println!("COUNT {}", row.count);
-            // println!("WIDTH {}", row.count / divisor);
-            // println!("WIDTH2 {:A<width$}", "", width = row.count / divisor);
-            // println!("LABEL1 {}", row.start);
-            // println!("LABEFMT {}", self.date_fmt_string());
-            // println!("LABEL2 {}", row.start.format(self.date_fmt_string()));
             writeln!(
                 f,
                 "[{label}] [{count}] {bar}",

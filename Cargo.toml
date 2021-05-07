@@ -12,6 +12,8 @@ isatty = "0.1"
 derive_builder = "0.10.0"
 regex = "1.4.5"
 chrono = "0.4"
+simplelog = "^0.10.0"
+log = "*"
 
 [dev-dependencies]
 float_eq = "0.5.0"

@@ -4,7 +4,6 @@ use std::ops::Range;
 
 use chrono::{DateTime, FixedOffset};
 use regex::Regex;
-use yansi::Color::{Magenta, Red};
 
 use crate::dateparser::LogDateParser;
 use crate::matchbar::{MatchBar, MatchBarRow};
@@ -15,8 +14,6 @@ pub struct DataReader {
     range: Option<Range<f64>>,
     #[builder(setter(strip_option), default)]
     regex: Option<Regex>,
-    #[builder(default)]
-    verbose: bool,
 }
 
 impl DataReader {
@@ -40,7 +37,7 @@ impl DataReader {
                         }
                     }
                 }
-                Err(error) => eprintln!("[{}]: {}", Red.paint("ERROR"), error),
+                Err(error) => error!("{}", error),
             }
         }
         vec
@@ -50,14 +47,7 @@ impl DataReader {
         match line.parse::<f64>() {
             Ok(n) => Some(n),
             Err(parse_error) => {
-                if self.verbose {
-                    eprintln!(
-                        "[{}] Cannot parse float ({}) at '{}'",
-                        Red.paint("ERROR"),
-                        parse_error,
-                        line
-                    );
-                }
+                debug!("Cannot parse float ({}) at '{}'", parse_error, line);
                 None
             }
         }
@@ -75,13 +65,7 @@ impl DataReader {
                 }
             }
             None => {
-                if self.verbose {
-                    eprintln!(
-                        "[{}] Regex does not match '{}'",
-                        Magenta.paint("DEBUG"),
-                        line
-                    );
-                }
+                debug!("Regex does not match '{}'", line);
                 None
             }
         }
@@ -99,7 +83,7 @@ impl DataReader {
                         row.inc_if_matches(&as_string);
                     }
                 }
-                Err(error) => eprintln!("[{}]: {}", Red.paint("ERROR"), error),
+                Err(error) => error!("{}", error),
             }
         }
         MatchBar::new(rows)
@@ -121,7 +105,7 @@ impl TimeReader {
         let first_line = match iterator.next() {
             Some(Ok(as_string)) => as_string,
             Some(Err(error)) => {
-                eprintln!("[{}]: {}", Red.paint("ERROR"), error);
+                error!("{}", error);
                 return vec;
             }
             _ => return vec,
@@ -130,22 +114,14 @@ impl TimeReader {
             Some(ts_format) => match LogDateParser::new_with_format(&first_line, &ts_format) {
                 Ok(p) => p,
                 Err(error) => {
-                    eprintln!(
-                        "[{}]: Could not figure out parsing strategy: {}",
-                        Red.paint("ERROR"),
-                        error
-                    );
+                    error!("Could not figure out parsing strategy: {}", error);
                     return vec;
                 }
             },
             None => match LogDateParser::new_with_guess(&first_line) {
                 Ok(p) => p,
                 Err(error) => {
-                    eprintln!(
-                        "[{}]: Could not figure out parsing strategy: {}",
-                        Red.paint("ERROR"),
-                        error
-                    );
+                    error!("Could not figure out parsing strategy: {}", error);
                     return vec;
                 }
             },
@@ -166,7 +142,7 @@ impl TimeReader {
                         }
                     }
                 }
-                Err(error) => eprintln!("[{}]: {}", Red.paint("ERROR"), error),
+                Err(error) => error!("{}", error),
             }
         }
         vec
@@ -179,12 +155,7 @@ fn open_file(path: &str) -> Box<dyn io::BufRead> {
         _ => match File::open(path) {
             Ok(fd) => Box::new(io::BufReader::new(fd)),
             Err(error) => {
-                eprintln!(
-                    "[{}] Could not open {}: {}",
-                    Red.paint("ERROR"),
-                    path,
-                    error
-                );
+                error!("Could not open {}: {}", path, error);
                 std::process::exit(0);
             }
         },

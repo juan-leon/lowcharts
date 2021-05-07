@@ -133,6 +133,7 @@ pub fn get_app() -> App<'static> {
                 .long("color")
                 .about("Use colors in the output")
                 .possible_values(&["auto", "no", "yes"])
+                .default_value("auto")
                 .takes_value(true),
         )
         .arg(
