@@ -18,3 +18,5 @@ log = "*"
 [dev-dependencies]
 float_eq = "0.5.0"
 tempfile = "3"
+assert_cmd = "1.0.3"
+predicates = "1.0.8"
