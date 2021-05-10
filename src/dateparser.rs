@@ -3,30 +3,32 @@ use std::ops::Range;
 use chrono::{DateTime, FixedOffset, NaiveDateTime, NaiveTime, ParseError, TimeZone, Utc};
 use regex::Regex;
 
-type DateParsingFun = fn(s: &str) -> Result<DateTime<FixedOffset>, ParseError>;
+type DateParsingFun = dyn Fn(&str) -> Result<DateTime<FixedOffset>, ParseError>;
 
 // Those are some date formats that are common for my personal (and biased)
 // experience.  So, there is logic to detect and parse them.
-const PARSE_SPECIFIERS: &[&str] = &[
+const DATE_FORMATS: &[&str] = &[
     "%Y-%m-%d %H:%M:%S,%3f", // python %(asctime)s
     "%Y-%m-%d %H:%M:%S",
     "%Y/%m/%d %H:%M:%S",  // Seen in some nginx logs
     "%d-%b-%Y::%H:%M:%S", // Seen in rabbitmq logs
-    "%H:%M:%S",           // strace -t
-    "%H:%M:%S.%6f",       // strace -tt (-ttt generates timestamps)
+];
+
+const TIME_FORMATS: &[&str] = &[
+    "%H:%M:%S",     // strace -t
+    "%H:%M:%S.%6f", // strace -tt (-ttt generates timestamps)
 ];
 
 // Max length that a timestamp can have
 const MAX_LEN: usize = 28;
 
-pub struct LogDateParser<'a> {
+pub struct LogDateParser {
     range: Range<usize>,
-    parser: Option<DateParsingFun>,
-    ts_format: Option<&'a str>,
+    parser: Box<DateParsingFun>,
 }
 
-impl<'a> LogDateParser<'a> {
-    pub fn new_with_guess(log_line: &str) -> Result<LogDateParser<'_>, String> {
+impl LogDateParser {
+    pub fn new_with_guess(log_line: &str) -> Result<LogDateParser, String> {
         if let Some(x) = Self::from_brackets(log_line) {
             Ok(x)
         } else if let Some(x) = Self::from_heuristic(log_line) {
@@ -36,23 +38,27 @@ impl<'a> LogDateParser<'a> {
         }
     }
 
-    pub fn new_with_format(
-        log_line: &str,
-        format_string: &'a str,
-    ) -> Result<LogDateParser<'a>, String> {
+    pub fn new_with_format(log_line: &str, format_string: &str) -> Result<LogDateParser, String> {
         // We look for where the timestamp is in logs using a brute force
         // approach with 1st log line, but capping the max length we scan for
         for i in 0..log_line.len() {
             for j in (i..(i + (MAX_LEN * 2)).min(log_line.len() + 1)).rev() {
                 if NaiveDateTime::parse_from_str(&log_line[i..j], format_string).is_ok() {
-                    // I would like to capture ts_format in a closure and assign
-                    // it to parser, but I cannot coerce a capturing closure to
-                    // a typed fn.  I still need to learn the idiomatic way of
-                    // dealing with this.
+                    let fmt = Box::new(format_string.to_string());
                     return Ok(LogDateParser {
                         range: i..j,
-                        parser: None,
-                        ts_format: Some(format_string),
+                        parser: Box::new(move |string: &str| {
+                            match NaiveDateTime::parse_from_str(string, &*fmt) {
+                                Ok(naive) => {
+                                    let date_time: DateTime<Utc> =
+                                        Utc.from_local_datetime(&naive).unwrap();
+                                    Ok(date_time.with_timezone(&TimeZone::from_offset(
+                                        &FixedOffset::west(0),
+                                    )))
+                                }
+                                Err(err) => Err(err),
+                            }
+                        }),
                     });
                 }
             }
@@ -65,25 +71,16 @@ impl<'a> LogDateParser<'a> {
 
     pub fn parse(&self, s: &str) -> Result<DateTime<FixedOffset>, ParseError> {
         let range = self.range.start.min(s.len())..self.range.end.min(s.len());
-        match self.parser {
-            Some(p) => p(&s[range]),
-            None => match NaiveDateTime::parse_from_str(&s[range], self.ts_format.unwrap()) {
-                Ok(naive) => {
-                    let date_time: DateTime<Utc> = Utc.from_local_datetime(&naive).unwrap();
-                    Ok(date_time.with_timezone(&TimeZone::from_offset(&FixedOffset::west(0))))
-                }
-                Err(err) => Err(err),
-            },
-        }
+        (self.parser)(&s[range])
     }
 
-    fn guess_parser(s: &str) -> Option<DateParsingFun> {
+    fn guess_parser(s: &str) -> Option<Box<DateParsingFun>> {
         if DateTime::parse_from_rfc3339(s).is_ok() {
-            Some(DateTime::parse_from_rfc3339)
+            return Some(Box::new(DateTime::parse_from_rfc3339));
         } else if DateTime::parse_from_rfc2822(s).is_ok() {
-            Some(DateTime::parse_from_rfc2822)
+            return Some(Box::new(DateTime::parse_from_rfc2822));
         } else if Self::looks_like_timestamp(&s) {
-            Some(|string: &str| {
+            return Some(Box::new(|string: &str| {
                 let dot = match string.find('.') {
                     Some(x) => x,
                     None => string.len(),
@@ -105,74 +102,36 @@ impl<'a> LogDateParser<'a> {
                     }
                     Err(_) => DateTime::parse_from_rfc3339(""),
                 }
-            })
-        } else if NaiveDateTime::parse_from_str(s, PARSE_SPECIFIERS[0]).is_ok() {
-            // TODO: All of this stuff below should be rewritten using macros.
-            // Reason for "repeating myself" is that I cannot coerce closures to
-            // fn types if they capture variables (an index to PARSE_SPECIFIERS,
-            // for instance).
-            Some(
-                |string: &str| match NaiveDateTime::parse_from_str(string, PARSE_SPECIFIERS[0]) {
-                    Ok(naive) => {
-                        let date_time: DateTime<Utc> = Utc.from_local_datetime(&naive).unwrap();
-                        Ok(date_time.with_timezone(&TimeZone::from_offset(&FixedOffset::west(0))))
-                    }
-                    Err(err) => Err(err),
-                },
-            )
-        } else if NaiveDateTime::parse_from_str(s, PARSE_SPECIFIERS[1]).is_ok() {
-            Some(
-                |string: &str| match NaiveDateTime::parse_from_str(string, PARSE_SPECIFIERS[1]) {
-                    Ok(naive) => {
-                        let date_time: DateTime<Utc> = Utc.from_local_datetime(&naive).unwrap();
-                        Ok(date_time.with_timezone(&TimeZone::from_offset(&FixedOffset::west(0))))
-                    }
-                    Err(err) => Err(err),
-                },
-            )
-        } else if NaiveDateTime::parse_from_str(s, PARSE_SPECIFIERS[2]).is_ok() {
-            Some(
-                |string: &str| match NaiveDateTime::parse_from_str(string, PARSE_SPECIFIERS[2]) {
-                    Ok(naive) => {
-                        let date_time: DateTime<Utc> = Utc.from_local_datetime(&naive).unwrap();
-                        Ok(date_time.with_timezone(&TimeZone::from_offset(&FixedOffset::west(0))))
-                    }
-                    Err(err) => Err(err),
-                },
-            )
-        } else if NaiveDateTime::parse_from_str(s, PARSE_SPECIFIERS[3]).is_ok() {
-            Some(
-                |string: &str| match NaiveDateTime::parse_from_str(string, PARSE_SPECIFIERS[3]) {
-                    Ok(naive) => {
-                        let date_time: DateTime<Utc> = Utc.from_local_datetime(&naive).unwrap();
-                        Ok(date_time.with_timezone(&TimeZone::from_offset(&FixedOffset::west(0))))
-                    }
-                    Err(err) => Err(err),
-                },
-            )
-        } else if NaiveTime::parse_from_str(s, PARSE_SPECIFIERS[4]).is_ok() {
-            Some(
-                |string: &str| match NaiveTime::parse_from_str(string, PARSE_SPECIFIERS[4]) {
-                    Ok(naive_time) => Ok(Utc::today()
-                        .and_time(naive_time)
-                        .unwrap()
-                        .with_timezone(&TimeZone::from_offset(&FixedOffset::west(0)))),
-                    Err(err) => Err(err),
-                },
-            )
-        } else if NaiveTime::parse_from_str(s, PARSE_SPECIFIERS[5]).is_ok() {
-            Some(
-                |string: &str| match NaiveTime::parse_from_str(string, PARSE_SPECIFIERS[5]) {
-                    Ok(naive_time) => Ok(Utc::today()
-                        .and_time(naive_time)
-                        .unwrap()
-                        .with_timezone(&TimeZone::from_offset(&FixedOffset::west(0)))),
-                    Err(err) => Err(err),
-                },
-            )
-        } else {
-            None
+            }));
         }
+        for format in DATE_FORMATS.iter() {
+            if NaiveDateTime::parse_from_str(s, format).is_ok() {
+                return Some(Box::new(
+                    move |string: &str| match NaiveDateTime::parse_from_str(string, format) {
+                        Ok(naive) => {
+                            let date_time: DateTime<Utc> = Utc.from_local_datetime(&naive).unwrap();
+                            Ok(date_time
+                                .with_timezone(&TimeZone::from_offset(&FixedOffset::west(0))))
+                        }
+                        Err(err) => Err(err),
+                    },
+                ));
+            }
+        }
+        for format in TIME_FORMATS.iter() {
+            if NaiveTime::parse_from_str(s, format).is_ok() {
+                return Some(Box::new(
+                    move |string: &str| match NaiveTime::parse_from_str(string, format) {
+                        Ok(naive_time) => Ok(Utc::today()
+                            .and_time(naive_time)
+                            .unwrap()
+                            .with_timezone(&TimeZone::from_offset(&FixedOffset::west(0)))),
+                        Err(err) => Err(err),
+                    },
+                ));
+            }
+        }
+        None
     }
 
     fn from_brackets(s: &str) -> Option<LogDateParser> {
@@ -182,8 +141,7 @@ impl<'a> LogDateParser<'a> {
                     match Self::guess_parser(&s[1..x]) {
                         Some(parser) => Some(LogDateParser {
                             range: 1..x,
-                            parser: Some(parser),
-                            ts_format: None,
+                            parser,
                         }),
                         _ => None,
                     }
@@ -203,8 +161,7 @@ impl<'a> LogDateParser<'a> {
                     if let Some(parser) = Self::guess_parser(&s[i..j]) {
                         return Some(LogDateParser {
                             range: i..j,
-                            parser: Some(parser),
-                            ts_format: None,
+                            parser,
                         });
                     }
                 }
