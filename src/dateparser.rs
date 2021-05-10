@@ -29,13 +29,25 @@ pub struct LogDateParser {
 
 impl LogDateParser {
     pub fn new_with_guess(log_line: &str) -> Result<LogDateParser, String> {
-        if let Some(x) = Self::from_brackets(log_line) {
-            Ok(x)
-        } else if let Some(x) = Self::from_heuristic(log_line) {
-            Ok(x)
-        } else {
-            Err(format!("Could not parse a timestamp in {}", log_line))
+        // All the guess work assume that datetimes start with a digit, and that
+        // digit is the first digit in the log line.  The approach is to locate
+        // the 1st digit and then try to parse as much text as possible with any
+        // of the "supported" formats (so that we do not lose precision digits
+        // or TZ info).
+        for (i, c) in log_line.chars().enumerate() {
+            if c.is_digit(10) {
+                for j in (i..(i + MAX_LEN).min(log_line.len() + 1)).rev() {
+                    if let Some(parser) = Self::guess_parser(&log_line[i..j]) {
+                        return Ok(LogDateParser {
+                            range: i..j,
+                            parser,
+                        });
+                    }
+                }
+                break;
+            }
         }
+        Err(format!("Could not parse a timestamp in {}", log_line))
     }
 
     pub fn new_with_format(log_line: &str, format_string: &str) -> Result<LogDateParser, String> {
@@ -129,43 +141,6 @@ impl LogDateParser {
                         Err(err) => Err(err),
                     },
                 ));
-            }
-        }
-        None
-    }
-
-    fn from_brackets(s: &str) -> Option<LogDateParser> {
-        match s.chars().next() {
-            Some('[') => {
-                if let Some(x) = s.find(']') {
-                    match Self::guess_parser(&s[1..x]) {
-                        Some(parser) => Some(LogDateParser {
-                            range: 1..x,
-                            parser,
-                        }),
-                        _ => None,
-                    }
-                } else {
-                    None
-                }
-            }
-            _ => None,
-        }
-    }
-
-    fn from_heuristic(s: &str) -> Option<LogDateParser> {
-        // First we locate the first digit
-        for (i, c) in s.chars().enumerate() {
-            if c.is_digit(10) {
-                for j in (i..(i + MAX_LEN).min(s.len() + 1)).rev() {
-                    if let Some(parser) = Self::guess_parser(&s[i..j]) {
-                        return Some(LogDateParser {
-                            range: i..j,
-                            parser,
-                        });
-                    }
-                }
-                break;
             }
         }
         None
