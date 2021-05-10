@@ -102,7 +102,8 @@ fn test_plot() {
             writeln!(file, "3").unwrap();
             writeln!(file, "4").unwrap();
             writeln!(file, "none").unwrap();
-            cmd.arg("plot")
+            cmd.arg("--verbose")
+                .arg("plot")
                 .arg(file.path().to_str().unwrap())
                 .arg("--height")
                 .arg("4")

@@ -43,9 +43,9 @@ fn configure_output(option: &str, verbose: bool) {
     };
     TermLogger::init(
         if verbose {
-            LevelFilter::Info
-        } else {
             LevelFilter::Debug
+        } else {
+            LevelFilter::Info
         },
         ConfigBuilder::new()
             .set_time_level(LevelFilter::Trace)
