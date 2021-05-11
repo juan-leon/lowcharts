@@ -51,6 +51,16 @@ the named one will be used).
     )
 }
 
+fn add_non_capturing_regex(app: App) -> App {
+    app.arg(
+        Arg::new("regex")
+            .long("regex")
+            .short('R')
+            .about("Filter out lines where regex is notr present")
+            .takes_value(true),
+    )
+}
+
 fn add_width(app: App) -> App {
     app.arg(
         Arg::new("width")
@@ -118,7 +128,7 @@ pub fn get_app() -> App<'static> {
                 .about("Use this string formatting")
                 .takes_value(true),
         );
-    timehist = add_input(add_width(add_regex(add_intervals(timehist))));
+    timehist = add_input(add_width(add_non_capturing_regex(add_intervals(timehist))));
 
     App::new("lowcharts")
         .author(clap::crate_authors!())

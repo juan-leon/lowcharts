@@ -1,6 +1,6 @@
 [package]
 name = "lowcharts"
-version = "0.3.1"
+version = "0.3.2"
 authors = ["JuanLeon Lahoz <juanleon.lahoz@gmail.com>"]
 edition = "2018"
 description = "Tool to draw low-resolution graphs in terminal"
