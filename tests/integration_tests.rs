@@ -112,10 +112,10 @@ fn test_plot() {
                 .assert()
                 .success()
                 .stdout(predicate::str::contains("Samples = 4; Min = 1; Max = 4\n"))
-                .stdout(predicate::str::contains("\n[3.25]    ●"))
-                .stdout(predicate::str::contains("\n[2.5]   ●"))
-                .stdout(predicate::str::contains("\n[1.75]  ●"))
-                .stdout(predicate::str::contains("\n[1] ●"))
+                .stdout(predicate::str::contains("\n[3.250]    ●"))
+                .stdout(predicate::str::contains("\n[2.500]   ●"))
+                .stdout(predicate::str::contains("\n[1.750]  ●"))
+                .stdout(predicate::str::contains("\n[1.000] ●"))
                 .stderr(predicate::str::contains("[DEBUG] Cannot parse float"));
         }
         Err(_) => assert!(false, "Could not create temp file"),

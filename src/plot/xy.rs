@@ -44,7 +44,12 @@ impl fmt::Display for XyPlot {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{}", self.stats)?;
         let _step = (self.stats.max - self.stats.min) / self.height as f64;
-        let y_width = format!("{:.3}", self.stats.max).len();
+        let y_width = self
+            .y_axis
+            .iter()
+            .map(|v| format!("{:.3}", v).len())
+            .max()
+            .unwrap();
         let mut newvec = self.y_axis.to_vec();
         newvec.reverse();
         print_line(f, &self.x_axis, newvec[0]..f64::INFINITY, y_width)?;
@@ -72,7 +77,7 @@ fn print_line(
     writeln!(
         f,
         "[{}] {}",
-        Blue.paint(format!("{y:.*}", y_width, y = range.start.to_string())),
+        Blue.paint(format!("{:>width$.3}", range.start, width = y_width)),
         Red.paint(row),
     )
 }
@@ -104,9 +109,9 @@ mod tests {
         plot.load(&[-1.0, 0.0, 1.0, 2.0, 3.0, 4.0, -1.0]);
         Paint::disable();
         let display = format!("{}", plot);
-        assert!(display.contains("[3]   ● "));
-        assert!(display.contains("[2]     "));
-        assert!(display.contains("[1]  ●  "));
-        assert!(display.contains("[-1] ●  ●"));
+        assert!(display.contains("[ 3.000]   ● "));
+        assert!(display.contains("[ 2.000]     "));
+        assert!(display.contains("[ 1.000]  ●  "));
+        assert!(display.contains("[-1.000] ●  ●"));
     }
 }
