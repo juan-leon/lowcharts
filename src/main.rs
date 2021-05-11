@@ -1,25 +1,19 @@
-use clap::ArgMatches;
-use std::env;
+mod app;
+mod plot;
+mod read;
+mod stats;
 
-use isatty::stdout_isatty;
-use regex::Regex;
-use yansi::Paint;
+use std::env;
 
 #[macro_use]
 extern crate derive_builder;
-
 #[macro_use]
 extern crate log;
+use clap::ArgMatches;
+use isatty::stdout_isatty;
+use regex::Regex;
 use simplelog::{ColorChoice, ConfigBuilder, LevelFilter, TermLogger, TerminalMode};
-
-mod app;
-mod dateparser;
-mod histogram;
-mod matchbar;
-mod plot;
-mod reader;
-mod stats;
-mod timehist;
+use yansi::Paint;
 
 fn configure_output(option: &str, verbose: bool) {
     let mut color_choice = ColorChoice::Auto;
@@ -58,8 +52,8 @@ fn configure_output(option: &str, verbose: bool) {
     .unwrap();
 }
 
-fn get_reader(matches: &ArgMatches) -> reader::DataReader {
-    let mut builder = reader::DataReaderBuilder::default();
+fn get_reader(matches: &ArgMatches) -> read::DataReader {
+    let mut builder = read::DataReaderBuilder::default();
     if matches.is_present("min") || matches.is_present("max") {
         let min = matches.value_of_t("min").unwrap_or(f64::NEG_INFINITY);
         let max = matches.value_of_t("max").unwrap_or(f64::INFINITY);
@@ -96,7 +90,7 @@ fn histogram(matches: &ArgMatches) {
 
     intervals = intervals.min(vec.len());
     let mut histogram =
-        histogram::Histogram::new(intervals, (stats.max - stats.min) / intervals as f64, stats);
+        plot::Histogram::new(intervals, (stats.max - stats.min) / intervals as f64, stats);
     histogram.load(&vec);
     print!("{:width$}", histogram, width = width);
 }
@@ -108,7 +102,7 @@ fn plot(matches: &ArgMatches) {
         warn!("No data to process");
         std::process::exit(0);
     }
-    let mut plot = plot::Plot::new(
+    let mut plot = plot::XyPlot::new(
         matches.value_of_t("width").unwrap(),
         matches.value_of_t("height").unwrap(),
         stats::Stats::new(&vec),
@@ -118,7 +112,7 @@ fn plot(matches: &ArgMatches) {
 }
 
 fn matchbar(matches: &ArgMatches) {
-    let reader = reader::DataReader::default();
+    let reader = read::DataReader::default();
     let width = matches.value_of_t("width").unwrap();
     print!(
         "{:width$}",
@@ -131,7 +125,7 @@ fn matchbar(matches: &ArgMatches) {
 }
 
 fn timehist(matches: &ArgMatches) {
-    let mut builder = reader::TimeReaderBuilder::default();
+    let mut builder = read::TimeReaderBuilder::default();
     if let Some(string) = matches.value_of("regex") {
         match Regex::new(&string) {
             Ok(re) => {
@@ -153,7 +147,7 @@ fn timehist(matches: &ArgMatches) {
         warn!("Not enough data to process");
         std::process::exit(0);
     }
-    let mut timehist = timehist::TimeHistogram::new(matches.value_of_t("intervals").unwrap(), &vec);
+    let mut timehist = plot::TimeHistogram::new(matches.value_of_t("intervals").unwrap(), &vec);
     timehist.load(&vec);
 
     print!("{:width$}", timehist, width = width);

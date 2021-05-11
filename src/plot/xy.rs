@@ -6,7 +6,7 @@ use yansi::Color::{Blue, Red};
 use crate::stats::Stats;
 
 #[derive(Debug)]
-pub struct Plot {
+pub struct XyPlot {
     x_axis: Vec<f64>,
     y_axis: Vec<f64>,
     width: usize,
@@ -14,9 +14,9 @@ pub struct Plot {
     stats: Stats,
 }
 
-impl Plot {
-    pub fn new(width: usize, height: usize, stats: Stats) -> Plot {
-        Plot {
+impl XyPlot {
+    pub fn new(width: usize, height: usize, stats: Stats) -> XyPlot {
+        XyPlot {
             x_axis: Vec::with_capacity(width),
             y_axis: Vec::with_capacity(height),
             width,
@@ -40,7 +40,7 @@ impl Plot {
     }
 }
 
-impl fmt::Display for Plot {
+impl fmt::Display for XyPlot {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{}", self.stats)?;
         let _step = (self.stats.max - self.stats.min) / self.height as f64;
@@ -86,7 +86,7 @@ mod tests {
     #[test]
     fn basic_test() {
         let stats = Stats::new(&[-1.0, 4.0]);
-        let mut plot = Plot::new(3, 5, stats);
+        let mut plot = XyPlot::new(3, 5, stats);
         plot.load(&[-1.0, 0.0, 1.0, 2.0, 3.0, 4.0, -1.0]);
         assert_float_eq!(plot.x_axis[0], -0.5, rmax <= f64::EPSILON);
         assert_float_eq!(plot.x_axis[1], 1.5, rmax <= f64::EPSILON);
@@ -100,7 +100,7 @@ mod tests {
     #[test]
     fn display_test() {
         let stats = Stats::new(&[-1.0, 4.0]);
-        let mut plot = Plot::new(3, 5, stats);
+        let mut plot = XyPlot::new(3, 5, stats);
         plot.load(&[-1.0, 0.0, 1.0, 2.0, 3.0, 4.0, -1.0]);
         Paint::disable();
         let display = format!("{}", plot);
