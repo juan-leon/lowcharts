@@ -15,6 +15,8 @@ use regex::Regex;
 use simplelog::{ColorChoice, ConfigBuilder, LevelFilter, TermLogger, TerminalMode};
 use yansi::Paint;
 
+/// Sets up color choices and verbosity in the two libraries used for output:
+/// simplelog and yansi
 fn configure_output(option: &str, verbose: bool) {
     let mut color_choice = ColorChoice::Auto;
     match option {
@@ -35,7 +37,7 @@ fn configure_output(option: &str, verbose: bool) {
         }
         _ => (),
     };
-    TermLogger::init(
+    if let Err(err) = TermLogger::init(
         if verbose {
             LevelFilter::Debug
         } else {
@@ -48,11 +50,15 @@ fn configure_output(option: &str, verbose: bool) {
             .build(),
         TerminalMode::Stderr,
         color_choice,
-    )
-    .unwrap();
+    ) {
+        // We trigger this error when unit testing this fn
+        eprintln!("Error: {}", err);
+    }
 }
 
-fn get_reader(matches: &ArgMatches) -> read::DataReader {
+/// Build a reader able to read floats (potentially capturing them with regex)
+/// from an input source.
+fn get_float_reader(matches: &ArgMatches) -> read::DataReader {
     let mut builder = read::DataReaderBuilder::default();
     if matches.is_present("min") || matches.is_present("max") {
         let min = matches.value_of_t("min").unwrap_or(f64::NEG_INFINITY);
@@ -77,8 +83,9 @@ fn get_reader(matches: &ArgMatches) -> read::DataReader {
     builder.build().unwrap()
 }
 
+/// Implements the hist cli-subcommand
 fn histogram(matches: &ArgMatches) {
-    let reader = get_reader(&matches);
+    let reader = get_float_reader(&matches);
     let vec = reader.read(matches.value_of("input").unwrap());
     if vec.is_empty() {
         warn!("No data to process");
@@ -95,8 +102,9 @@ fn histogram(matches: &ArgMatches) {
     print!("{:width$}", histogram, width = width);
 }
 
+/// Implements the plot cli-subcommand
 fn plot(matches: &ArgMatches) {
-    let reader = get_reader(&matches);
+    let reader = get_float_reader(&matches);
     let vec = reader.read(matches.value_of("input").unwrap());
     if vec.is_empty() {
         warn!("No data to process");
@@ -111,6 +119,7 @@ fn plot(matches: &ArgMatches) {
     print!("{}", plot);
 }
 
+/// Implements the matches cli-subcommand
 fn matchbar(matches: &ArgMatches) {
     let reader = read::DataReader::default();
     let width = matches.value_of_t("width").unwrap();
@@ -124,6 +133,7 @@ fn matchbar(matches: &ArgMatches) {
     );
 }
 
+/// Implements the timehist cli-subcommand
 fn timehist(matches: &ArgMatches) {
     let mut builder = read::TimeReaderBuilder::default();
     if let Some(string) = matches.value_of("regex") {
@@ -174,4 +184,37 @@ fn main() {
         }
         _ => unreachable!("Invalid subcommand"),
     };
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use yansi::Color::Blue;
+
+    #[test]
+    fn test_output_yes() {
+        Paint::enable();
+        configure_output("yes", true);
+        let display = format!("{}", Blue.paint("blue"));
+        assert_eq!("\u{1b}[34mblue\u{1b}[0m", display);
+        assert_eq!(LevelFilter::Debug, log::max_level());
+    }
+
+    #[test]
+    fn test_output_no() {
+        Paint::enable();
+        configure_output("no", false);
+        let display = format!("{}", Blue.paint("blue"));
+        assert_eq!("blue", display);
+        assert_eq!(LevelFilter::Info, log::max_level());
+    }
+
+    #[test]
+    fn test_output_auto() {
+        Paint::enable();
+        env::set_var("TERM", "dumb");
+        configure_output("auto", false);
+        let display = format!("{}", Blue.paint("blue"));
+        assert_eq!("blue", display);
+    }
 }
