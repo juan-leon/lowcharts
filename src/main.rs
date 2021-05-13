@@ -9,6 +9,7 @@ use std::env;
 extern crate derive_builder;
 #[macro_use]
 extern crate log;
+use chrono::Duration;
 use clap::ArgMatches;
 use isatty::stdout_isatty;
 use regex::Regex;
@@ -53,6 +54,13 @@ fn configure_output(option: &str, verbose: bool) {
     ) {
         // We trigger this error when unit testing this fn
         eprintln!("Error: {}", err);
+    }
+}
+
+fn parse_duration(duration: &str) -> Result<Duration, humantime::DurationError> {
+    match humantime::parse_duration(duration) {
+        Ok(d) => Ok(Duration::milliseconds(d.as_millis() as i64)),
+        Err(error) => Err(error),
     }
 }
 
@@ -150,6 +158,16 @@ fn timehist(matches: &ArgMatches) {
     if let Some(as_str) = matches.value_of("format") {
         builder.ts_format(as_str.to_string());
     }
+    builder.early_stop(matches.is_present("early-stop"));
+    if let Some(duration) = matches.value_of("duration") {
+        match parse_duration(duration) {
+            Ok(d) => builder.duration(d),
+            Err(err) => {
+                error!("Failed to parse duration {}: {}", duration, err);
+                std::process::exit(1);
+            }
+        };
+    };
     let width = matches.value_of_t("width").unwrap();
     let reader = builder.build().unwrap();
     let vec = reader.read(matches.value_of("input").unwrap());
@@ -216,5 +234,17 @@ mod tests {
         configure_output("auto", false);
         let display = format!("{}", Blue.paint("blue"));
         assert_eq!("blue", display);
+    }
+
+    #[test]
+    fn test_duration() {
+        assert_eq!(
+            parse_duration("2h 30m 5s 100ms"),
+            Ok(Duration::milliseconds(
+                2 * 60 * 60000 + 30 * 60000 + 5000 + 100
+            ))
+        );
+        assert_eq!(parse_duration("3days"), Ok(Duration::days(3)));
+        assert!(parse_duration("bananas").is_err());
     }
 }

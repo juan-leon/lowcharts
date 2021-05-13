@@ -127,7 +127,16 @@ pub fn get_app() -> App<'static> {
                 .short('f')
                 .about("Use this string formatting")
                 .takes_value(true),
-        );
+        )
+        .arg(
+            Arg::new("duration")
+                .long("duration")
+                .about("Cap the time interval at that duration (example: '3h 5min')")
+                .takes_value(true),
+        )
+        .arg(Arg::new("early-stop").long("early-stop").about(
+            "If duration flag is used, assume monotonic times and stop as soon as possible",
+        ));
     timehist = add_input(add_width(add_non_capturing_regex(add_intervals(timehist))));
 
     App::new("lowcharts")

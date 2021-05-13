@@ -60,6 +60,17 @@ fn test_timehist() {
         .stdout(predicate::str::contains("Matches: 2."))
         .stdout(predicate::str::contains("[00:18:47.888165] [1] ∎\n"))
         .stdout(predicate::str::contains("[00:18:48.388165] [1] ∎"));
+    // Stdin has timestamps
+    let mut cmd = Command::cargo_bin("lowcharts").unwrap();
+    cmd.arg("timehist")
+        .arg("--intervals")
+        .arg("2")
+        .arg("--duration")
+        .arg("200ms")
+        .write_stdin("foo 1619655527.888165 bar\nfoo 1619655528.888165 bar\n")
+        .assert()
+        .success()
+        .stderr(predicate::str::contains("Not enough data to process"));
 }
 
 #[test]

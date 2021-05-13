@@ -40,8 +40,8 @@ impl MatchBar {
         }
         MatchBar {
             vec,
-            top_lenght,
             top_values,
+            top_lenght,
         }
     }
 }

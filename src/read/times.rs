@@ -1,6 +1,6 @@
 use std::io::BufRead;
 
-use chrono::{DateTime, FixedOffset};
+use chrono::{DateTime, Duration, FixedOffset};
 use regex::Regex;
 
 use crate::read::dateparser::LogDateParser;
@@ -12,6 +12,10 @@ pub struct TimeReader {
     regex: Option<Regex>,
     #[builder(setter(strip_option), default)]
     ts_format: Option<String>,
+    #[builder(setter(strip_option), default)]
+    duration: Option<Duration>,
+    #[builder(default)]
+    early_stop: bool,
 }
 
 impl TimeReader {
@@ -45,10 +49,24 @@ impl TimeReader {
         if let Ok(x) = parser.parse(&first_line) {
             vec.push(x);
         }
+        let cut_datetime = match self.duration {
+            Some(duration) => {
+                if !self.early_stop || vec.is_empty() {
+                    None
+                } else {
+                    Some(vec[0] + duration)
+                }
+            }
+            _ => None,
+        };
         for line in iterator {
             match line {
                 Ok(string) => {
                     if let Ok(x) = parser.parse(&string) {
+                        match cut_datetime {
+                            Some(d) if x > d => break,
+                            _ => (),
+                        };
                         if let Some(re) = &self.regex {
                             if re.is_match(&string) {
                                 vec.push(x);
@@ -59,6 +77,14 @@ impl TimeReader {
                     }
                 }
                 Err(error) => error!("{}", error),
+            }
+        }
+        if cut_datetime.is_none() {
+            if let Some(duration) = self.duration {
+                if let Some(min) = vec.iter().min() {
+                    let max = *min + duration;
+                    vec.retain(|&d| d <= max);
+                }
             }
         }
         vec
@@ -120,6 +146,59 @@ mod tests {
                 assert_eq!(
                     ts[3],
                     DateTime::parse_from_rfc3339("2021-04-15T06:28:00+00:00").unwrap()
+                );
+            }
+            Err(_) => assert!(false, "Could not create temp file"),
+        }
+    }
+
+    #[test]
+    fn time_with_duration() {
+        let mut builder = TimeReaderBuilder::default();
+        builder.duration(Duration::seconds(90));
+        let reader = builder.build().unwrap();
+        match NamedTempFile::new() {
+            Ok(ref mut file) => {
+                writeln!(file, "[2021-04-15T06:25:31+00:00] foo").unwrap();
+                writeln!(file, "[2021-04-15T06:26:31+00:00] foo").unwrap();
+                writeln!(file, "[2021-04-15T06:27:31+00:00] foo").unwrap();
+                writeln!(file, "[2021-04-15T06:28:31+00:00] foo").unwrap();
+                let ts = reader.read(file.path().to_str().unwrap());
+                assert_eq!(ts.len(), 2);
+                assert_eq!(
+                    ts[0],
+                    DateTime::parse_from_rfc3339("2021-04-15T06:25:31+00:00").unwrap()
+                );
+                assert_eq!(
+                    ts[1],
+                    DateTime::parse_from_rfc3339("2021-04-15T06:26:31+00:00").unwrap()
+                );
+            }
+            Err(_) => assert!(false, "Could not create temp file"),
+        }
+    }
+
+    #[test]
+    fn time_with_early_stop() {
+        let mut builder = TimeReaderBuilder::default();
+        builder.duration(Duration::seconds(90)).early_stop(true);
+        let reader = builder.build().unwrap();
+        match NamedTempFile::new() {
+            Ok(ref mut file) => {
+                writeln!(file, "[2021-04-15T06:25:31+00:00] foo").unwrap();
+                writeln!(file, "[2021-04-15T06:26:31+00:00] foo").unwrap();
+                writeln!(file, "[2021-04-15T06:27:31+00:00] foo").unwrap();
+                // This date goes backwards
+                writeln!(file, "[2021-04-15T06:25:32+00:00] foo").unwrap();
+                let ts = reader.read(file.path().to_str().unwrap());
+                assert_eq!(ts.len(), 2);
+                assert_eq!(
+                    ts[0],
+                    DateTime::parse_from_rfc3339("2021-04-15T06:25:31+00:00").unwrap()
+                );
+                assert_eq!(
+                    ts[1],
+                    DateTime::parse_from_rfc3339("2021-04-15T06:26:31+00:00").unwrap()
                 );
             }
             Err(_) => assert!(false, "Could not create temp file"),

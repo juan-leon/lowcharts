@@ -12,6 +12,7 @@ isatty = "0.1"
 derive_builder = "0.10.0"
 regex = "1.4.5"
 chrono = "0.4"
+humantime = "2.1.0"
 simplelog = "^0.10.0"
 log = "*"
 

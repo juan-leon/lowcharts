@@ -15,7 +15,11 @@ jobs:
     - name: Build
       run: cargo build --verbose
     - name: Run tests
-      run: cargo test --verbose
+      # We need to avoid concurrency running tests (that are very fast,
+      # anyways), in order to to avoid false positives when testing if writing
+      # colored output in the terminal is enabled or disabled (a test could
+      # enable it while other is running and checking if is disabled).
+      run: cargo test -- --test-threads=1
     - name: Check format
       run: cargo fmt -- --check
     - name: Run clippy
