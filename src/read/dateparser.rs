@@ -232,6 +232,11 @@ mod tests {
             r.parse("1619655527.123"),
             DateTime::parse_from_rfc3339("2021-04-29T00:18:47.123+00:00")
         );
+        let r = LogDateParser::new_with_guess("1619688527").unwrap();
+        assert_eq!(
+            r.parse("1619655527.123"),
+            DateTime::parse_from_rfc3339("2021-04-29T00:18:47+00:00")
+        );
     }
 
     #[test]

@@ -146,7 +146,7 @@ mod tests {
     use yansi::Paint;
 
     #[test]
-    fn basic_test() {
+    fn test_buckets() {
         let stats = Stats::new(&[-2.0, 14.0]);
         let mut hist = Histogram::new(8, 2.5, stats);
         hist.load(&[
@@ -163,6 +163,13 @@ mod tests {
     }
 
     #[test]
+    fn test_buckets_bad_stats() {
+        let mut hist = Histogram::new(6, 1.0, Stats::new(&[-2.0, 4.0]));
+        hist.load(&[-1.0, 2.0, -1.0, 2.0, 10.0, 10.0, 10.0, -10.0]);
+        assert_eq!(hist.top, 2);
+    }
+
+    #[test]
     fn display_test() {
         let stats = Stats::new(&[-2.0, 14.0]);
         let mut hist = Histogram::new(8, 2.5, stats);
@@ -174,5 +181,16 @@ mod tests {
         assert!(display.contains("[-2.000 ..  0.500] [3] ∎∎∎\n"));
         assert!(display.contains("[ 0.500 ..  3.000] [8] ∎∎∎∎∎∎∎∎\n"));
         assert!(display.contains("[10.500 .. 13.000] [2] ∎∎\n"));
+    }
+
+    #[test]
+    fn display_test_bad_width() {
+        let mut hist = Histogram::new(8, 2.5, Stats::new(&[-2.0, 14.0]));
+        hist.load(&[
+            -1.0, -1.1, 2.0, 2.0, 2.1, -0.9, 11.0, 11.2, 1.9, 1.99, 1.98, 1.97, 1.96,
+        ]);
+        Paint::disable();
+        let display = format!("{:2}", hist);
+        assert!(display.contains("[-2.000 ..  0.500] [3] ∎∎∎\n"));
     }
 }
