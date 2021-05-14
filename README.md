@@ -1,6 +1,9 @@
 # lowcharts
 Tool to draw low-resolution graphs in terminal.
 
+[![Rust](https://github.com/juan-leon/lowcharts/actions/workflows/test.yml/badge.svg)](https://github.com/juan-leon/lowcharts/actions/workflows/test.yml)
+[![dependency status](https://deps.rs/repo/github/juan-leon/lowcharts/status.svg)](https://deps.rs/repo/github/juan-leon/lowcharts)
+
 **lowcharts** is meant to be used in those scenarios where we have numerical
 data in text files that we want to display in the terminal to do a basic
 analysis.
@@ -12,8 +15,6 @@ metrics exposed to a prometheus (or similar) and graphed in a grafana dashboard
 (or similar).  But sometimes we need to cope with non ideal worlds, and
 troubleshoot a service with nothing more of what we can muster in a shell
 terminal.
-
-[![Rust](https://github.com/juan-leon/lowcharts/actions/workflows/test.yml/badge.svg)](https://github.com/juan-leon/lowcharts/actions/workflows/test.yml)
 
 ### Usage
 

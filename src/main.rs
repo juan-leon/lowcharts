@@ -11,7 +11,6 @@ extern crate derive_builder;
 extern crate log;
 use chrono::Duration;
 use clap::ArgMatches;
-use isatty::stdout_isatty;
 use regex::Regex;
 use simplelog::{ColorChoice, ConfigBuilder, LevelFilter, TermLogger, TerminalMode};
 use yansi::Paint;
@@ -28,7 +27,7 @@ fn configure_output(option: &str, verbose: bool) {
         "auto" => match env::var("TERM") {
             Ok(value) if value == "dumb" => Paint::disable(),
             _ => {
-                if !stdout_isatty() {
+                if atty::isnt(atty::Stream::Stdout) {
                     Paint::disable();
                 }
             }
