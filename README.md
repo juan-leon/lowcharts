@@ -2,6 +2,7 @@
 Tool to draw low-resolution graphs in terminal.
 
 [![Rust](https://github.com/juan-leon/lowcharts/actions/workflows/test.yml/badge.svg)](https://github.com/juan-leon/lowcharts/actions/workflows/test.yml)
+[![codecov](https://codecov.io/gh/juan-leon/lowcharts/branch/main/graph/badge.svg?token=FNTO8M149T)](https://codecov.io/gh/juan-leon/lowcharts)
 [![dependency status](https://deps.rs/repo/github/juan-leon/lowcharts/status.svg)](https://deps.rs/repo/github/juan-leon/lowcharts)
 
 **lowcharts** is meant to be used in those scenarios where we have numerical
