@@ -6,12 +6,10 @@ pre-commit:
 release:
 	cargo build --release
 
+test:
+	cargo test -- --test-threads 1
+
 # Sadly, this misses coverage for those integrations tests that use
 # assert_cmd, as it does not follow forks
 coverage:
 	cargo tarpaulin -- --test-threads 1
-
-# TODO: add trigger for this target from within github actions
-codecov:
-	cargo tarpaulin --out Xml -- --test-threads 1
-	codecov-io
