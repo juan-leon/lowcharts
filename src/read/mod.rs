@@ -17,8 +17,20 @@ fn open_file(path: &str) -> Box<dyn io::BufRead> {
             Ok(fd) => Box::new(io::BufReader::new(fd)),
             Err(error) => {
                 error!("Could not open {}: {}", path, error);
-                std::process::exit(1);
+                panic!("{}", error);
             }
         },
+    }
+}
+
+#[cfg(test)]
+mod tests {
+
+    use super::*;
+
+    #[test]
+    #[should_panic]
+    fn test_bad_file() {
+        open_file("/no/good");
     }
 }

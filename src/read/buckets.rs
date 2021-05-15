@@ -98,67 +98,51 @@ mod tests {
     #[test]
     fn basic_reader_test() {
         let reader = DataReader::default();
-        match NamedTempFile::new() {
-            Ok(ref mut file) => {
-                writeln!(file, "1.3").unwrap();
-                writeln!(file, "foobar").unwrap();
-                writeln!(file, "2").unwrap();
-                writeln!(file, "-2.7").unwrap();
-                let vec = reader.read(file.path().to_str().unwrap());
-                assert_eq!(vec, [1.3, 2.0, -2.7]);
-            }
-            Err(_) => assert!(false, "Could not create temp file"),
-        }
+        let mut file = NamedTempFile::new().unwrap();
+        writeln!(file, "1.3").unwrap();
+        writeln!(file, "foobar").unwrap();
+        writeln!(file, "2").unwrap();
+        writeln!(file, "-2.7").unwrap();
+        let vec = reader.read(file.path().to_str().unwrap());
+        assert_eq!(vec, [1.3, 2.0, -2.7]);
     }
 
     #[test]
     fn regex_first_match() {
         let re = Regex::new("^foo ([0-9.-]+) ([0-9.-]+)").unwrap();
         let reader = DataReaderBuilder::default().regex(re).build().unwrap();
-        match NamedTempFile::new() {
-            Ok(ref mut file) => {
-                writeln!(file, "foo 1.3 1.6").unwrap();
-                writeln!(file, "nothing").unwrap();
-                writeln!(file, "1.1").unwrap();
-                writeln!(file, "1.1 1.2").unwrap();
-                writeln!(file, "foo -2 3").unwrap();
-                writeln!(file, "foo 5").unwrap();
-                let vec = reader.read(file.path().to_str().unwrap());
-                assert_eq!(vec, [1.3, -2.0]);
-            }
-            Err(_) => assert!(false, "Could not create temp file"),
-        }
+        let mut file = NamedTempFile::new().unwrap();
+        writeln!(file, "foo 1.3 1.6").unwrap();
+        writeln!(file, "nothing").unwrap();
+        writeln!(file, "1.1").unwrap();
+        writeln!(file, "1.1 1.2").unwrap();
+        writeln!(file, "foo -2 3").unwrap();
+        writeln!(file, "foo 5").unwrap();
+        let vec = reader.read(file.path().to_str().unwrap());
+        assert_eq!(vec, [1.3, -2.0]);
     }
 
     #[test]
     fn regex_named_match() {
         let re = Regex::new("^foo ([0-9.-]+) (?P<value>[0-9.-]+)").unwrap();
         let reader = DataReaderBuilder::default().regex(re).build().unwrap();
-        match NamedTempFile::new() {
-            Ok(ref mut file) => {
-                writeln!(file, "foo 1.3 1.6").unwrap();
-                writeln!(file, "nothing").unwrap();
-                writeln!(file, "1.1").unwrap();
-                writeln!(file, "1.1 1.2").unwrap();
-                writeln!(file, "foo -2 3").unwrap();
-                writeln!(file, "foo 5").unwrap();
-                let vec = reader.read(file.path().to_str().unwrap());
-                assert_eq!(vec, [1.6, 3.0]);
-            }
-            Err(_) => assert!(false, "Could not create temp file"),
-        }
+        let mut file = NamedTempFile::new().unwrap();
+        writeln!(file, "foo 1.3 1.6").unwrap();
+        writeln!(file, "nothing").unwrap();
+        writeln!(file, "1.1").unwrap();
+        writeln!(file, "1.1 1.2").unwrap();
+        writeln!(file, "foo -2 3").unwrap();
+        writeln!(file, "foo 5").unwrap();
+        let vec = reader.read(file.path().to_str().unwrap());
+        assert_eq!(vec, [1.6, 3.0]);
     }
 
     #[test]
     fn regex_empty_file() {
         let reader = DataReader::default();
-        match NamedTempFile::new() {
-            Ok(ref mut file) => {
-                let vec = reader.read(file.path().to_str().unwrap());
-                assert_eq!(vec, []);
-            }
-            Err(_) => assert!(false, "Could not create temp file"),
-        }
+        let file = NamedTempFile::new().unwrap();
+        let vec = reader.read(file.path().to_str().unwrap());
+        assert_eq!(vec, []);
     }
 
     #[test]
@@ -167,41 +151,33 @@ mod tests {
             .range(-1.0..1.0)
             .build()
             .unwrap();
-        match NamedTempFile::new() {
-            Ok(ref mut file) => {
-                writeln!(file, "1.3").unwrap();
-                writeln!(file, "2").unwrap();
-                writeln!(file, "-0.5").unwrap();
-                writeln!(file, "0.5").unwrap();
-                let vec = reader.read(file.path().to_str().unwrap());
-                assert_eq!(vec, [-0.5, 0.5]);
-            }
-            Err(_) => assert!(false, "Could not create temp file"),
-        }
+        let mut file = NamedTempFile::new().unwrap();
+        writeln!(file, "1.3").unwrap();
+        writeln!(file, "2").unwrap();
+        writeln!(file, "-0.5").unwrap();
+        writeln!(file, "0.5").unwrap();
+        let vec = reader.read(file.path().to_str().unwrap());
+        assert_eq!(vec, [-0.5, 0.5]);
     }
 
     #[test]
     fn basic_match_reader() {
         let reader = DataReader::default();
-        match NamedTempFile::new() {
-            Ok(ref mut file) => {
-                writeln!(file, "foobar").unwrap();
-                writeln!(file, "data data foobar").unwrap();
-                writeln!(file, "data data").unwrap();
-                writeln!(file, "foobar").unwrap();
-                writeln!(file, "none").unwrap();
-                let mb = reader.read_matches(
-                    file.path().to_str().unwrap(),
-                    vec!["random", "foobar", "data"],
-                );
-                assert_eq!(mb.vec[0].label, "random");
-                assert_eq!(mb.vec[0].count, 0);
-                assert_eq!(mb.vec[1].label, "foobar");
-                assert_eq!(mb.vec[1].count, 3);
-                assert_eq!(mb.vec[2].label, "data");
-                assert_eq!(mb.vec[2].count, 2);
-            }
-            Err(_) => assert!(false, "Could not create temp file"),
-        }
+        let mut file = NamedTempFile::new().unwrap();
+        writeln!(file, "foobar").unwrap();
+        writeln!(file, "data data foobar").unwrap();
+        writeln!(file, "data data").unwrap();
+        writeln!(file, "foobar").unwrap();
+        writeln!(file, "none").unwrap();
+        let mb = reader.read_matches(
+            file.path().to_str().unwrap(),
+            vec!["random", "foobar", "data"],
+        );
+        assert_eq!(mb.vec[0].label, "random");
+        assert_eq!(mb.vec[0].count, 0);
+        assert_eq!(mb.vec[1].label, "foobar");
+        assert_eq!(mb.vec[1].count, 3);
+        assert_eq!(mb.vec[2].label, "data");
+        assert_eq!(mb.vec[2].count, 2);
     }
 }

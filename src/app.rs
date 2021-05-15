@@ -178,16 +178,13 @@ mod tests {
         let arg_vec = vec!["lowcharts", "--verbose", "hist", "foo"];
         let m = get_app().get_matches_from(arg_vec);
         assert!(m.is_present("verbose"));
-        if let Some(sub_m) = m.subcommand_matches("hist") {
-            assert_eq!("foo", sub_m.value_of("input").unwrap());
-            assert!(sub_m.value_of("max").is_none());
-            assert!(sub_m.value_of("min").is_none());
-            assert!(sub_m.value_of("regex").is_none());
-            assert_eq!("110", sub_m.value_of("width").unwrap());
-            assert_eq!("20", sub_m.value_of("intervals").unwrap());
-        } else {
-            assert!(false, "Subcommand `hist` not detected");
-        }
+        let sub_m = m.subcommand_matches("hist").unwrap();
+        assert_eq!("foo", sub_m.value_of("input").unwrap());
+        assert!(sub_m.value_of("max").is_none());
+        assert!(sub_m.value_of("min").is_none());
+        assert!(sub_m.value_of("regex").is_none());
+        assert_eq!("110", sub_m.value_of("width").unwrap());
+        assert_eq!("20", sub_m.value_of("intervals").unwrap());
     }
 
     #[test]
@@ -204,41 +201,32 @@ mod tests {
         ];
         let m = get_app().get_matches_from(arg_vec);
         assert!(!m.is_present("verbose"));
-        if let Some(sub_m) = m.subcommand_matches("plot") {
-            assert_eq!("-", sub_m.value_of("input").unwrap());
-            assert_eq!("1.1", sub_m.value_of("max").unwrap());
-            assert_eq!("0.9", sub_m.value_of("min").unwrap());
-            assert_eq!("11", sub_m.value_of("height").unwrap());
-        } else {
-            assert!(false, "Subcommand `plot` not detected");
-        }
+        let sub_m = m.subcommand_matches("plot").unwrap();
+        assert_eq!("-", sub_m.value_of("input").unwrap());
+        assert_eq!("1.1", sub_m.value_of("max").unwrap());
+        assert_eq!("0.9", sub_m.value_of("min").unwrap());
+        assert_eq!("11", sub_m.value_of("height").unwrap());
     }
 
     #[test]
     fn matches_subcommand_arg_parsing() {
         let arg_vec = vec!["lowcharts", "matches", "-", "A", "B", "C"];
         let m = get_app().get_matches_from(arg_vec);
-        if let Some(sub_m) = m.subcommand_matches("matches") {
-            assert_eq!("-", sub_m.value_of("input").unwrap());
-            assert_eq!(
-                // vec![String::from("A"), String::from("B"), String::from("C")],
-                vec!["A", "B", "C"],
-                sub_m.values_of("match").unwrap().collect::<Vec<&str>>()
-            );
-        } else {
-            assert!(false, "Subcommand `matches` not detected");
-        }
+        let sub_m = m.subcommand_matches("matches").unwrap();
+        assert_eq!("-", sub_m.value_of("input").unwrap());
+        assert_eq!(
+            // vec![String::from("A"), String::from("B"), String::from("C")],
+            vec!["A", "B", "C"],
+            sub_m.values_of("match").unwrap().collect::<Vec<&str>>()
+        );
     }
 
     #[test]
     fn timehist_subcommand_arg_parsing() {
         let arg_vec = vec!["lowcharts", "timehist", "--regex", "foo", "some"];
         let m = get_app().get_matches_from(arg_vec);
-        if let Some(sub_m) = m.subcommand_matches("timehist") {
-            assert_eq!("some", sub_m.value_of("input").unwrap());
-            assert_eq!("foo", sub_m.value_of("regex").unwrap());
-        } else {
-            assert!(false, "Subcommand `timehist` not detected");
-        }
+        let sub_m = m.subcommand_matches("timehist").unwrap();
+        assert_eq!("some", sub_m.value_of("input").unwrap());
+        assert_eq!("foo", sub_m.value_of("regex").unwrap());
     }
 }
