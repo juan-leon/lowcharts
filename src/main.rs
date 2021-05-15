@@ -15,6 +15,13 @@ use regex::Regex;
 use simplelog::{ColorChoice, ConfigBuilder, LevelFilter, TermLogger, TerminalMode};
 use yansi::Paint;
 
+fn assert_data<T>(vec: &[T], min: usize) -> bool {
+    if vec.len() < min {
+        warn!("Not enough data to process");
+    }
+    vec.len() >= min
+}
+
 /// Sets up color choices and verbosity in the two libraries used for output:
 /// simplelog and yansi
 fn configure_output(option: &str, verbose: bool) {
@@ -65,14 +72,14 @@ fn parse_duration(duration: &str) -> Result<Duration, humantime::DurationError> 
 
 /// Build a reader able to read floats (potentially capturing them with regex)
 /// from an input source.
-fn get_float_reader(matches: &ArgMatches) -> read::DataReader {
+fn get_float_reader(matches: &ArgMatches) -> Result<read::DataReader, ()> {
     let mut builder = read::DataReaderBuilder::default();
     if matches.is_present("min") || matches.is_present("max") {
         let min = matches.value_of_t("min").unwrap_or(f64::NEG_INFINITY);
         let max = matches.value_of_t("max").unwrap_or(f64::INFINITY);
         if min > max {
             error!("Minimum should be smaller than maximum");
-            std::process::exit(1);
+            return Err(());
         }
         builder.range(min..max);
     }
@@ -83,20 +90,22 @@ fn get_float_reader(matches: &ArgMatches) -> read::DataReader {
             }
             _ => {
                 error!("Failed to parse regex {}", string);
-                std::process::exit(1);
+                return Err(());
             }
         };
     }
-    builder.build().unwrap()
+    Ok(builder.build().unwrap())
 }
 
 /// Implements the hist cli-subcommand
-fn histogram(matches: &ArgMatches) {
-    let reader = get_float_reader(&matches);
+fn histogram(matches: &ArgMatches) -> i32 {
+    let reader = match get_float_reader(&matches) {
+        Ok(r) => r,
+        _ => return 2,
+    };
     let vec = reader.read(matches.value_of("input").unwrap());
-    if vec.is_empty() {
-        warn!("No data to process");
-        std::process::exit(0);
+    if !assert_data(&vec, 1) {
+        return 1;
     }
     let stats = stats::Stats::new(&vec);
     let width = matches.value_of_t("width").unwrap();
@@ -107,15 +116,18 @@ fn histogram(matches: &ArgMatches) {
         plot::Histogram::new(intervals, (stats.max - stats.min) / intervals as f64, stats);
     histogram.load(&vec);
     print!("{:width$}", histogram, width = width);
+    0
 }
 
 /// Implements the plot cli-subcommand
-fn plot(matches: &ArgMatches) {
-    let reader = get_float_reader(&matches);
+fn plot(matches: &ArgMatches) -> i32 {
+    let reader = match get_float_reader(&matches) {
+        Ok(r) => r,
+        _ => return 2,
+    };
     let vec = reader.read(matches.value_of("input").unwrap());
-    if vec.is_empty() {
-        warn!("No data to process");
-        std::process::exit(0);
+    if !assert_data(&vec, 1) {
+        return 1;
     }
     let mut plot = plot::XyPlot::new(
         matches.value_of_t("width").unwrap(),
@@ -124,10 +136,11 @@ fn plot(matches: &ArgMatches) {
     );
     plot.load(&vec);
     print!("{}", plot);
+    0
 }
 
 /// Implements the matches cli-subcommand
-fn matchbar(matches: &ArgMatches) {
+fn matchbar(matches: &ArgMatches) -> i32 {
     let reader = read::DataReader::default();
     let width = matches.value_of_t("width").unwrap();
     print!(
@@ -138,10 +151,11 @@ fn matchbar(matches: &ArgMatches) {
         ),
         width = width
     );
+    0
 }
 
 /// Implements the timehist cli-subcommand
-fn timehist(matches: &ArgMatches) {
+fn timehist(matches: &ArgMatches) -> i32 {
     let mut builder = read::TimeReaderBuilder::default();
     if let Some(string) = matches.value_of("regex") {
         match Regex::new(&string) {
@@ -150,7 +164,7 @@ fn timehist(matches: &ArgMatches) {
             }
             _ => {
                 error!("Failed to parse regex {}", string);
-                std::process::exit(1);
+                return 2;
             }
         };
     }
@@ -163,21 +177,19 @@ fn timehist(matches: &ArgMatches) {
             Ok(d) => builder.duration(d),
             Err(err) => {
                 error!("Failed to parse duration {}: {}", duration, err);
-                std::process::exit(1);
+                return 2;
             }
         };
     };
     let width = matches.value_of_t("width").unwrap();
     let reader = builder.build().unwrap();
     let vec = reader.read(matches.value_of("input").unwrap());
-    if vec.len() <= 1 {
-        warn!("Not enough data to process");
-        std::process::exit(0);
-    }
-    let mut timehist = plot::TimeHistogram::new(matches.value_of_t("intervals").unwrap(), &vec);
-    timehist.load(&vec);
-
-    print!("{:width$}", timehist, width = width);
+    if assert_data(&vec, 2) {
+        let mut timehist = plot::TimeHistogram::new(matches.value_of_t("intervals").unwrap(), &vec);
+        timehist.load(&vec);
+        print!("{:width$}", timehist, width = width);
+    };
+    0
 }
 
 fn main() {
@@ -186,21 +198,13 @@ fn main() {
         matches.value_of("color").unwrap(),
         matches.is_present("verbose"),
     );
-    match matches.subcommand() {
-        Some(("hist", subcommand_matches)) => {
-            histogram(subcommand_matches);
-        }
-        Some(("plot", subcommand_matches)) => {
-            plot(subcommand_matches);
-        }
-        Some(("matches", subcommand_matches)) => {
-            matchbar(subcommand_matches);
-        }
-        Some(("timehist", subcommand_matches)) => {
-            timehist(subcommand_matches);
-        }
+    std::process::exit(match matches.subcommand() {
+        Some(("hist", subcommand_matches)) => histogram(subcommand_matches),
+        Some(("plot", subcommand_matches)) => plot(subcommand_matches),
+        Some(("matches", subcommand_matches)) => matchbar(subcommand_matches),
+        Some(("timehist", subcommand_matches)) => timehist(subcommand_matches),
         _ => unreachable!("Invalid subcommand"),
-    };
+    });
 }
 
 #[cfg(test)]
