@@ -30,49 +30,28 @@ impl TimeReader {
             }
             _ => return vec,
         };
-        let parser = match &self.ts_format {
-            Some(ts_format) => match LogDateParser::new_with_format(&first_line, &ts_format) {
-                Ok(p) => p,
-                Err(error) => {
-                    error!("Could not figure out parsing strategy: {}", error);
-                    return vec;
-                }
-            },
-            None => match LogDateParser::new_with_guess(&first_line) {
-                Ok(p) => p,
-                Err(error) => {
-                    error!("Could not figure out parsing strategy: {}", error);
-                    return vec;
-                }
-            },
+        let parser = match self.build_parser(&first_line) {
+            Ok(p) => p,
+            Err(error) => {
+                error!("Could not figure out parsing strategy: {}", error);
+                return vec;
+            }
         };
+        let mut cut_datetime: Option<DateTime<FixedOffset>> = None;
         if let Ok(x) = parser.parse(&first_line) {
-            vec.push(x);
-        }
-        let cut_datetime = match self.duration {
-            Some(duration) => {
-                if !self.early_stop || vec.is_empty() {
-                    None
-                } else {
-                    Some(vec[0] + duration)
+            if self.early_stop {
+                if let Some(duration) = self.duration {
+                    cut_datetime = Some(x + duration)
                 }
             }
-            _ => None,
-        };
+            self.push_conditionally(x, &mut vec, &first_line, None);
+        }
         for line in iterator {
             match line {
                 Ok(string) => {
                     if let Ok(x) = parser.parse(&string) {
-                        match cut_datetime {
-                            Some(d) if x > d => break,
-                            _ => (),
-                        };
-                        if let Some(re) = &self.regex {
-                            if re.is_match(&string) {
-                                vec.push(x);
-                            }
-                        } else {
-                            vec.push(x);
+                        if self.push_conditionally(x, &mut vec, &string, cut_datetime) {
+                            break;
                         }
                     }
                 }
@@ -88,6 +67,35 @@ impl TimeReader {
             }
         }
         vec
+    }
+
+    fn build_parser(&self, line: &str) -> Result<LogDateParser, String> {
+        match &self.ts_format {
+            Some(ts_format) => LogDateParser::new_with_format(&line, &ts_format),
+            None => LogDateParser::new_with_guess(&line),
+        }
+    }
+
+    fn push_conditionally(
+        &self,
+        d: DateTime<FixedOffset>,
+        vec: &mut Vec<DateTime<FixedOffset>>,
+        line: &str,
+        cut_datetime: Option<DateTime<FixedOffset>>,
+    ) -> bool {
+        if let Some(cut) = cut_datetime {
+            if cut < d {
+                return self.early_stop;
+            }
+        }
+        if let Some(re) = &self.regex {
+            if re.is_match(&line) {
+                vec.push(d);
+            }
+        } else {
+            vec.push(d);
+        };
+        false
     }
 }
 
