@@ -15,6 +15,7 @@ use regex::Regex;
 use simplelog::{ColorChoice, ConfigBuilder, LevelFilter, TermLogger, TerminalMode};
 use yansi::Paint;
 
+/// True if vec has al least 'min' elements
 fn assert_data<T>(vec: &[T], min: usize) -> bool {
     if vec.len() < min {
         warn!("Not enough data to process");
@@ -249,5 +250,14 @@ mod tests {
         );
         assert_eq!(parse_duration("3days"), Ok(Duration::days(3)));
         assert!(parse_duration("bananas").is_err());
+    }
+
+    #[test]
+    fn test_assert_data() {
+        let v = vec![true];
+        assert!(assert_data(&v, 1));
+        assert!(!assert_data(&v, 2));
+        let v = Vec::<bool>::new();
+        assert!(!assert_data(&v, 1));
     }
 }
