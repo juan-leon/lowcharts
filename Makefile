@@ -12,4 +12,4 @@ test:
 # Sadly, this misses coverage for those integrations tests that use
 # assert_cmd, as it does not follow forks
 coverage:
-	cargo tarpaulin -o Html -- --test-threads 1
+	cargo tarpaulin -o Html --ignore-tests -- --test-threads 1

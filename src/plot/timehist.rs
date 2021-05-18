@@ -3,13 +3,14 @@ use std::fmt;
 use chrono::{DateTime, Duration, FixedOffset};
 use yansi::Color::{Blue, Green, Red};
 
+use crate::plot::date_fmt_string;
+
 #[derive(Debug)]
 struct TimeBucket {
     start: DateTime<FixedOffset>,
     count: usize,
 }
 
-// TODO: use trait for Bucket and TimeBucket
 impl TimeBucket {
     fn new(start: DateTime<FixedOffset>) -> TimeBucket {
         TimeBucket { start, count: 0 }
@@ -31,7 +32,6 @@ pub struct TimeHistogram {
     nanos: u64,
 }
 
-// TODO: use trait for Histogram and TimeHistogram
 impl TimeHistogram {
     pub fn new(size: usize, ts: &[DateTime<FixedOffset>]) -> TimeHistogram {
         let mut vec = Vec::<TimeBucket>::with_capacity(size);
@@ -74,15 +74,6 @@ impl TimeHistogram {
             Some(((x * self.vec.len() as u64 / self.nanos) as usize).min(self.last))
         }
     }
-
-    fn date_fmt_string(&self) -> &str {
-        match self.step.num_seconds() {
-            x if x > 86400 => "%Y-%m-%d %H:%M:%S",
-            x if x > 300 => "%H:%M:%S",
-            x if x > 1 => "%H:%M:%S%.3f",
-            _ => "%H:%M:%S%.6f",
-        }
-    }
 }
 
 impl fmt::Display for TimeHistogram {
@@ -104,12 +95,12 @@ impl fmt::Display for TimeHistogram {
             Red.paint("∎"),
             Blue.paint(divisor.to_string()),
         )?;
-        let fmt = self.date_fmt_string();
+        let ts_fmt = date_fmt_string(self.step.num_seconds());
         for row in self.vec.iter() {
             writeln!(
                 f,
                 "[{label}] [{count}] {bar}",
-                label = Blue.paint(format!("{}", row.start.format(fmt))),
+                label = Blue.paint(format!("{}", row.start.format(ts_fmt))),
                 count = Green.paint(format!("{:width$}", row.count, width = width_count)),
                 bar = Red.paint(format!("{:∎<width$}", "", width = row.count / divisor))
             )?;
@@ -134,7 +125,6 @@ mod tests {
         vec.push(DateTime::parse_from_rfc3339("2023-04-15T04:25:00+00:00").unwrap());
         let mut th = TimeHistogram::new(3, &vec);
         th.load(&vec);
-        println!("{}", th);
         let display = format!("{}", th);
         assert!(display.contains("Matches: 5"));
         assert!(display.contains("represents a count of 1"));
@@ -152,8 +142,6 @@ mod tests {
         vec.push(DateTime::parse_from_rfc3339("2022-04-15T04:25:00.006+00:00").unwrap());
         let mut th = TimeHistogram::new(4, &vec);
         th.load(&vec);
-        println!("{}", th);
-        println!("{:#?}", th);
         let display = format!("{}", th);
         assert!(display.contains("Matches: 3"));
         assert!(display.contains("represents a count of 1"));

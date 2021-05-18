@@ -22,7 +22,7 @@ terminal.
 Type `lowcharts --help`, or `lowcharts PLOT-TYPE --help` for a complete list of
 options.
 
-Currently four basic types of plots are supported:
+Currently five basic types of plots are supported:
 
 #### Bar chart for matches in the input
 
@@ -124,6 +124,16 @@ specify it via command line flag.  For instance, `--format
 timezone part of the format string (the autodetection works fine with
 timezones).
 
+
+#### Split Time Histogram
+
+This adds up the time histogram and bar chart in a single visualization.
+
+This chart is generated using  `strace -tt ls -lR 2>&1 | lowcharts split-timehist open mmap close read write --intervals 10`:
+
+[![Sample plot with lowcharts](resources/split-timehist-example.png)](resources/split-timehist-example.png)
+
+This graph depicts the relative frequency of search terms in time.
 
 ### Installing
 

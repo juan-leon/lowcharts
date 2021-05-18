@@ -28,7 +28,14 @@ pub struct LogDateParser {
 }
 
 impl LogDateParser {
-    pub fn new_with_guess(log_line: &str) -> Result<LogDateParser, String> {
+    pub fn new(log_line: &str, format_string: &Option<String>) -> Result<LogDateParser, String> {
+        match format_string {
+            Some(ts_format) => Self::new_with_format(&log_line, &ts_format),
+            None => Self::new_with_guess(&log_line),
+        }
+    }
+
+    fn new_with_guess(log_line: &str) -> Result<LogDateParser, String> {
         // All the guess work assume that datetimes start with a digit, and that
         // digit is the first digit in the log line.  The approach is to locate
         // the 1st digit and then try to parse as much text as possible with any
@@ -50,7 +57,7 @@ impl LogDateParser {
         Err(format!("Could not parse a timestamp in {}", log_line))
     }
 
-    pub fn new_with_format(log_line: &str, format_string: &str) -> Result<LogDateParser, String> {
+    fn new_with_format(log_line: &str, format_string: &str) -> Result<LogDateParser, String> {
         // We look for where the timestamp is in logs using a brute force
         // approach with 1st log line, but capping the max length we scan for
         for i in 0..log_line.len() {

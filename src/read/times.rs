@@ -30,7 +30,7 @@ impl TimeReader {
             }
             _ => return vec,
         };
-        let parser = match self.build_parser(&first_line) {
+        let parser = match LogDateParser::new(&first_line, &self.ts_format) {
             Ok(p) => p,
             Err(error) => {
                 error!("Could not figure out parsing strategy: {}", error);
@@ -67,13 +67,6 @@ impl TimeReader {
             }
         }
         vec
-    }
-
-    fn build_parser(&self, line: &str) -> Result<LogDateParser, String> {
-        match &self.ts_format {
-            Some(ts_format) => LogDateParser::new_with_format(&line, &ts_format),
-            None => LogDateParser::new_with_guess(&line),
-        }
     }
 
     fn push_conditionally(

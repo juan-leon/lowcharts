@@ -104,6 +104,40 @@ fn test_matchbar() {
 }
 
 #[test]
+fn test_splittime() {
+    let mut cmd = Command::cargo_bin("lowcharts").unwrap();
+    cmd.arg("split-timehist")
+        .arg("1")
+        .arg("2")
+        .arg("3")
+        .arg("4")
+        .arg("5")
+        .arg("6")
+        .assert()
+        .failure()
+        .stderr(predicate::str::contains(
+            "Only 5 different sub-groups are supported",
+        ));
+    let mut cmd = Command::cargo_bin("lowcharts").unwrap();
+    cmd.arg("split-timehist")
+        .arg("A")
+        .arg("B")
+        .arg("C")
+        .arg("--intervals")
+        .arg("2")
+        .write_stdin("1619655527.888165 A\n1619655528.888165 A\n1619655527.888165 B\n")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("Matches: 3."))
+        .stdout(predicate::str::contains("A: 2"))
+        .stdout(predicate::str::contains("B: 1."))
+        .stdout(predicate::str::contains("C: 0."))
+        .stdout(predicate::str::contains("Each ∎ represents a count of 1\n"))
+        .stdout(predicate::str::contains("[00:18:47.888165] [1/1/0] ∎∎\n"))
+        .stdout(predicate::str::contains("[00:18:48.388165] [1/0/0] ∎\n"));
+}
+
+#[test]
 fn test_plot() {
     let mut cmd = Command::cargo_bin("lowcharts").unwrap();
     match NamedTempFile::new() {

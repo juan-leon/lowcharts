@@ -193,6 +193,38 @@ fn timehist(matches: &ArgMatches) -> i32 {
     0
 }
 
+/// Implements the timehist cli-subcommand
+fn splittime(matches: &ArgMatches) -> i32 {
+    let mut builder = read::SplitTimeReaderBuilder::default();
+    let string_list: Vec<String> = match matches.values_of("match") {
+        Some(s) => s.map(|s| s.to_string()).collect(),
+        None => {
+            error!("At least a match is needed");
+            return 2;
+        }
+    };
+    if string_list.len() > 5 {
+        error!("Only 5 different sub-groups are supported");
+        return 2;
+    }
+    if let Some(as_str) = matches.value_of("format") {
+        builder.ts_format(as_str.to_string());
+    }
+    builder.matches(string_list.iter().map(|s| s.to_string()).collect());
+    let width = matches.value_of_t("width").unwrap();
+    let reader = builder.build().unwrap();
+    let vec = reader.read(matches.value_of("input").unwrap());
+    if assert_data(&vec, 2) {
+        let timehist = plot::SplitTimeHistogram::new(
+            matches.value_of_t("intervals").unwrap(),
+            string_list,
+            &vec,
+        );
+        print!("{:width$}", timehist, width = width);
+    };
+    0
+}
+
 fn main() {
     let matches = app::get_app().get_matches();
     configure_output(
@@ -204,6 +236,7 @@ fn main() {
         Some(("plot", subcommand_matches)) => plot(subcommand_matches),
         Some(("matches", subcommand_matches)) => matchbar(subcommand_matches),
         Some(("timehist", subcommand_matches)) => timehist(subcommand_matches),
+        Some(("split-timehist", subcommand_matches)) => splittime(subcommand_matches),
         _ => unreachable!("Invalid subcommand"),
     });
 }

@@ -1,8 +1,10 @@
 pub use self::buckets::{DataReader, DataReaderBuilder};
+pub use self::splittimes::{SplitTimeReader, SplitTimeReaderBuilder};
 pub use self::times::TimeReaderBuilder;
 
 mod buckets;
 mod dateparser;
+mod splittimes;
 mod times;
 
 use std::fs::File;

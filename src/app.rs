@@ -9,6 +9,16 @@ fn add_input(app: App) -> App {
     )
 }
 
+fn add_input_as_option(app: App) -> App {
+    app.arg(
+        Arg::new("input")
+            .long("input")
+            .default_value("-")
+            .long_about("If not present or a single dash, standard input will be used")
+            .takes_value(true),
+    )
+}
+
 fn add_min_max(app: App) -> App {
     app.arg(
         Arg::new("max")
@@ -109,7 +119,7 @@ pub fn get_app() -> App<'static> {
         .setting(AppSettings::ColoredHelp)
         .setting(AppSettings::AllowMissingPositional)
         .about("Plot barchar with counts of occurences of matches params");
-    matches = add_input(add_width(matches)).arg(
+    matches = add_input_as_option(add_width(matches)).arg(
         Arg::new("match")
             .about("Count maches for those strings")
             .required(true)
@@ -139,6 +149,25 @@ pub fn get_app() -> App<'static> {
         ));
     timehist = add_input(add_width(add_non_capturing_regex(add_intervals(timehist))));
 
+    let mut splittimehist = App::new("split-timehist")
+        .version(clap::crate_version!())
+        .setting(AppSettings::ColoredHelp)
+        .about("Plot histogram of with amount of matches over time, split per match type")
+        .arg(
+            Arg::new("format")
+                .long("format")
+                .short('f')
+                .about("Use this string formatting")
+                .takes_value(true),
+        );
+    splittimehist = add_input_as_option(add_width(add_intervals(splittimehist))).arg(
+        Arg::new("match")
+            .about("Count maches for those strings")
+            .required(true)
+            .takes_value(true)
+            .multiple(true),
+    );
+
     App::new("lowcharts")
         .author(clap::crate_authors!())
         .version(clap::crate_version!())
@@ -166,6 +195,7 @@ pub fn get_app() -> App<'static> {
         .subcommand(plot)
         .subcommand(matches)
         .subcommand(timehist)
+        .subcommand(splittimehist)
 }
 
 #[cfg(test)]
@@ -210,13 +240,20 @@ mod tests {
 
     #[test]
     fn matches_subcommand_arg_parsing() {
-        let arg_vec = vec!["lowcharts", "matches", "-", "A", "B", "C"];
+        let arg_vec = vec!["lowcharts", "matches", "A", "B", "C"];
         let m = get_app().get_matches_from(arg_vec);
         let sub_m = m.subcommand_matches("matches").unwrap();
         assert_eq!("-", sub_m.value_of("input").unwrap());
         assert_eq!(
-            // vec![String::from("A"), String::from("B"), String::from("C")],
             vec!["A", "B", "C"],
+            sub_m.values_of("match").unwrap().collect::<Vec<&str>>()
+        );
+        let arg_vec = vec!["lowcharts", "matches", "A", "--input", "B", "C"];
+        let m = get_app().get_matches_from(arg_vec);
+        let sub_m = m.subcommand_matches("matches").unwrap();
+        assert_eq!("B", sub_m.value_of("input").unwrap());
+        assert_eq!(
+            vec!["A", "C"],
             sub_m.values_of("match").unwrap().collect::<Vec<&str>>()
         );
     }
@@ -228,5 +265,16 @@ mod tests {
         let sub_m = m.subcommand_matches("timehist").unwrap();
         assert_eq!("some", sub_m.value_of("input").unwrap());
         assert_eq!("foo", sub_m.value_of("regex").unwrap());
+    }
+
+    #[test]
+    fn splittimehist_subcommand_arg_parsing() {
+        let arg_vec = vec!["lowcharts", "split-timehist", "foo", "bar"];
+        let m = get_app().get_matches_from(arg_vec);
+        let sub_m = m.subcommand_matches("split-timehist").unwrap();
+        assert_eq!(
+            vec!["foo", "bar"],
+            sub_m.values_of("match").unwrap().collect::<Vec<&str>>()
+        );
     }
 }
