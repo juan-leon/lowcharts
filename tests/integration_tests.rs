@@ -166,3 +166,19 @@ fn test_plot() {
         Err(_) => assert!(false, "Could not create temp file"),
     }
 }
+
+#[test]
+fn test_hist_negative_min() {
+    let mut cmd = Command::cargo_bin("lowcharts").unwrap();
+    cmd.arg("hist")
+        .arg("--min")
+        .arg("-1")
+        .arg("--max")
+        .arg("10.1")
+        .write_stdin("4.2\n2.4\n-2\n")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains(
+            "Samples = 2; Min = 2.4; Max = 4.2",
+        ));
+}

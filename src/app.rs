@@ -24,6 +24,7 @@ fn add_min_max(app: App) -> App {
         Arg::new("max")
             .long("max")
             .short('M')
+            .allow_hyphen_values(true)
             .about("Filter out values bigger than this")
             .takes_value(true),
     )
@@ -31,6 +32,7 @@ fn add_min_max(app: App) -> App {
         Arg::new("min")
             .long("min")
             .short('m')
+            .allow_hyphen_values(true)
             .about("Filter out values smaller than this")
             .takes_value(true),
     )
