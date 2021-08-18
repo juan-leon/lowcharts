@@ -23,7 +23,7 @@ terminal.
 Type `lowcharts --help`, or `lowcharts PLOT-TYPE --help` for a complete list of
 options.
 
-Currently five basic types of plots are supported:
+Currently six basic types of plots are supported:
 
 #### Bar chart for matches in the input
 
@@ -33,7 +33,7 @@ This chart is generated using `lowcharts matches database.log SELECT UPDATE DELE
 
 [![Simple bar chart with lowcharts](resources/matches-example.png)](resources/matches-example.png)
 
-#### Histogram
+#### Histogram for numerical inputs
 
 This chart is generated using `python3 -c 'import random; [print(random.normalvariate(5, 5)) for _ in range(100000)]' | lowcharts hist`:
 
@@ -85,19 +85,6 @@ each ∎ represents a count of 228
 [0.044 .. 0.049] [  183]
 ```
 
-#### X-Y Plot
-
-This chart is generated using  `cat ram-usage | lowcharts plot --height 20 --width 50`:
-
-[![Sample plot with lowcharts](resources/plot-example.png)](resources/plot-example.png)
-
-Note that x axis is not labelled.  The tool splits the input data by chunks of a
-fixed size and then the chart display the averages of those chunks.  In other
-words: grouping data by time is not (yet?) supported; you can see the evolution
-of a metric over time, but not the speed of that evolution.
-
-There is regex support for this type of plots.
-
 #### Time Histogram
 
 This chart is generated using  `strace -tt ls -lR * 2>&1 | lowcharts timehist --intervals 10`:
@@ -109,7 +96,7 @@ similar way, and would give you a glimpse of when and how many 404s are being
 triggered in your server.
 
 The idea is to depict the frequency of logs that match a regex (by default any
-log that is read by the tool).  The sub-command can autodetect the more common
+log that is read by the tool).  The sub-command can autodetect the most common
 (in my personal and biased experience) datetime/timestamp formats: rfc 3339, rfc
 2822, python `%(asctime)s`, golang default log format, nginx, rabbitmq, strace
 -t (or -tt, or -ttt),ltrace,... as long as the timestamp is present in the first
@@ -130,11 +117,37 @@ timezones).
 
 This adds up the time histogram and bar chart in a single visualization.
 
-This chart is generated using  `strace -tt ls -lR 2>&1 | lowcharts split-timehist open mmap close read write --intervals 10`:
+This chart is generated using `strace -tt ls -lR 2>&1 | lowcharts split-timehist open mmap close read write --intervals 10`:
 
 [![Sample plot with lowcharts](resources/split-timehist-example.png)](resources/split-timehist-example.png)
 
 This graph depicts the relative frequency of search terms in time.
+
+#### Common terms histogram
+
+Useful for plotting most common terms in input lines.
+
+This sample chart is generated using `strace ls -l 2>&1 | lowcharts common-terms --lines 8 -R '(.*?)\('`:
+
+[![Sample plot with lowcharts](resources/common-terms-example.png)](resources/common-terms-example.png)
+
+The graph depicts the 8 syscalls most used by `ls -l` command, along with its
+number of uses and sorted.  In general, using `lowcharts common-terms` is a
+handy substitute to commands of the form `awk ... | sort | uniq -c | sort -rn |
+head`.
+
+#### X-Y Plot
+
+This chart is generated using  `cat ram-usage | lowcharts plot --height 20 --width 50`:
+
+[![Sample plot with lowcharts](resources/plot-example.png)](resources/plot-example.png)
+
+Note that x axis is not labelled.  The tool splits the input data by chunks of a
+fixed size and then the chart display the averages of those chunks.  In other
+words: grouping data by time is not (yet?) supported; you can see the evolution
+of a metric over time, but not the speed of that evolution.
+
+There is regex support for this type of plots.
 
 ### Installing
 

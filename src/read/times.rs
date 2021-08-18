@@ -82,7 +82,7 @@ impl TimeReader {
             }
         }
         if let Some(re) = &self.regex {
-            if re.is_match(&line) {
+            if re.is_match(line) {
                 vec.push(d);
             }
         } else {

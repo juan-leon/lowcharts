@@ -30,8 +30,8 @@ pub struct LogDateParser {
 impl LogDateParser {
     pub fn new(log_line: &str, format_string: &Option<String>) -> Result<LogDateParser, String> {
         match format_string {
-            Some(ts_format) => Self::new_with_format(&log_line, &ts_format),
-            None => Self::new_with_guess(&log_line),
+            Some(ts_format) => Self::new_with_format(log_line, ts_format),
+            None => Self::new_with_guess(log_line),
         }
     }
 
@@ -98,7 +98,7 @@ impl LogDateParser {
             return Some(Box::new(DateTime::parse_from_rfc3339));
         } else if DateTime::parse_from_rfc2822(s).is_ok() {
             return Some(Box::new(DateTime::parse_from_rfc2822));
-        } else if Self::looks_like_timestamp(&s) {
+        } else if Self::looks_like_timestamp(s) {
             return Some(Box::new(|string: &str| {
                 let dot = match string.find('.') {
                     Some(x) => x,

@@ -46,8 +46,7 @@ lines.
 By default this will use a capture group named `value`.  If not present, it will
 use first capture group.
 
-If no regex is used, a number per line is expected (something that can be parsed
-as float).
+If no regex is used, the whole input lines will be matched.
 
 Examples of regex are ' 200 \\d+ ([0-9.]+)' (where there is one anonymous capture
 group) and 'a(a)? (?P<value>[0-9.]+)' (where there are two capture groups, and
@@ -68,7 +67,7 @@ fn add_non_capturing_regex(app: App) -> App {
         Arg::new("regex")
             .long("regex")
             .short('R')
-            .about("Filter out lines where regex is notr present")
+            .about("Filter out lines where regex is not present")
             .takes_value(true),
     )
 }
@@ -170,6 +169,19 @@ pub fn get_app() -> App<'static> {
             .multiple(true),
     );
 
+    let mut common_terms = App::new("common-terms")
+        .version(clap::crate_version!())
+        .setting(AppSettings::ColoredHelp)
+        .about("Plot histogram with most common terms in input lines");
+    common_terms = add_input(add_regex(add_width(common_terms))).arg(
+        Arg::new("lines")
+            .long("lines")
+            .short('l')
+            .about("Display that many lines, sorting by most frequent")
+            .default_value("10")
+            .takes_value(true),
+    );
+
     App::new("lowcharts")
         .author(clap::crate_authors!())
         .version(clap::crate_version!())
@@ -198,6 +210,7 @@ pub fn get_app() -> App<'static> {
         .subcommand(matches)
         .subcommand(timehist)
         .subcommand(splittimehist)
+        .subcommand(common_terms)
 }
 
 #[cfg(test)]
@@ -278,5 +291,14 @@ mod tests {
             vec!["foo", "bar"],
             sub_m.values_of("match").unwrap().collect::<Vec<&str>>()
         );
+    }
+
+    #[test]
+    fn terms_subcommand_arg_parsing() {
+        let arg_vec = vec!["lowcharts", "common-terms", "--regex", "foo", "some"];
+        let m = get_app().get_matches_from(arg_vec);
+        let sub_m = m.subcommand_matches("common-terms").unwrap();
+        assert_eq!("some", sub_m.value_of("input").unwrap());
+        assert_eq!("foo", sub_m.value_of("regex").unwrap());
     }
 }

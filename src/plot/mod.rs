@@ -1,12 +1,14 @@
 pub use self::histogram::Histogram;
 pub use self::matchbar::{MatchBar, MatchBarRow};
 pub use self::splittimehist::SplitTimeHistogram;
+pub use self::terms::CommonTerms;
 pub use self::timehist::TimeHistogram;
 pub use self::xy::XyPlot;
 
 mod histogram;
 mod matchbar;
 mod splittimehist;
+mod terms;
 mod timehist;
 mod xy;
 

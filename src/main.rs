@@ -85,7 +85,7 @@ fn get_float_reader(matches: &ArgMatches) -> Result<read::DataReader, ()> {
         builder.range(min..max);
     }
     if let Some(string) = matches.value_of("regex") {
-        match Regex::new(&string) {
+        match Regex::new(string) {
             Ok(re) => {
                 builder.regex(re);
             }
@@ -100,7 +100,7 @@ fn get_float_reader(matches: &ArgMatches) -> Result<read::DataReader, ()> {
 
 /// Implements the hist cli-subcommand
 fn histogram(matches: &ArgMatches) -> i32 {
-    let reader = match get_float_reader(&matches) {
+    let reader = match get_float_reader(matches) {
         Ok(r) => r,
         _ => return 2,
     };
@@ -122,7 +122,7 @@ fn histogram(matches: &ArgMatches) -> i32 {
 
 /// Implements the plot cli-subcommand
 fn plot(matches: &ArgMatches) -> i32 {
-    let reader = match get_float_reader(&matches) {
+    let reader = match get_float_reader(matches) {
         Ok(r) => r,
         _ => return 2,
     };
@@ -155,11 +155,42 @@ fn matchbar(matches: &ArgMatches) -> i32 {
     0
 }
 
+/// Implements the common-terms cli-subcommand
+fn common_terms(matches: &ArgMatches) -> i32 {
+    let mut builder = read::DataReaderBuilder::default();
+    if let Some(string) = matches.value_of("regex") {
+        match Regex::new(string) {
+            Ok(re) => {
+                builder.regex(re);
+            }
+            _ => {
+                error!("Failed to parse regex {}", string);
+                return 1;
+            }
+        };
+    } else {
+        builder.regex(Regex::new("(.*)").unwrap());
+    };
+    let reader = builder.build().unwrap();
+    let width = matches.value_of_t("width").unwrap();
+    let lines = matches.value_of_t("lines").unwrap();
+    if lines < 1 {
+        error!("You should specify a potitive number of lines");
+        return 2;
+    };
+    print!(
+        "{:width$}",
+        reader.read_terms(matches.value_of("input").unwrap(), lines),
+        width = width
+    );
+    0
+}
+
 /// Implements the timehist cli-subcommand
 fn timehist(matches: &ArgMatches) -> i32 {
     let mut builder = read::TimeReaderBuilder::default();
     if let Some(string) = matches.value_of("regex") {
-        match Regex::new(&string) {
+        match Regex::new(string) {
             Ok(re) => {
                 builder.regex(re);
             }
@@ -236,6 +267,7 @@ fn main() {
         Some(("plot", subcommand_matches)) => plot(subcommand_matches),
         Some(("matches", subcommand_matches)) => matchbar(subcommand_matches),
         Some(("timehist", subcommand_matches)) => timehist(subcommand_matches),
+        Some(("common-terms", subcommand_matches)) => common_terms(subcommand_matches),
         Some(("split-timehist", subcommand_matches)) => splittime(subcommand_matches),
         _ => unreachable!("Invalid subcommand"),
     });

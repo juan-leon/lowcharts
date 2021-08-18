@@ -77,7 +77,7 @@ impl fmt::Display for Histogram {
         let writer = HistWriter {
             width: f.width().unwrap_or(110),
         };
-        writer.write(f, &self)
+        writer.write(f, self)
     }
 }
 

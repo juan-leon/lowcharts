@@ -3,7 +3,7 @@ use std::ops::Range;
 
 use regex::Regex;
 
-use crate::plot::{MatchBar, MatchBarRow};
+use crate::plot::{CommonTerms, MatchBar, MatchBarRow};
 use crate::read::open_file;
 
 #[derive(Debug, Default, Builder)]
@@ -24,7 +24,7 @@ impl DataReader {
         for line in open_file(path).lines() {
             match line {
                 Ok(as_string) => {
-                    if let Some(n) = line_parser(&self, &as_string) {
+                    if let Some(n) = line_parser(self, &as_string) {
                         match &self.range {
                             Some(range) => {
                                 if range.contains(&n) {
@@ -55,9 +55,9 @@ impl DataReader {
         match self.regex.as_ref().unwrap().captures(line) {
             Some(cap) => {
                 if let Some(name) = cap.name("value") {
-                    self.parse_float(&name.as_str())
+                    self.parse_float(name.as_str())
                 } else if let Some(capture) = cap.get(1) {
-                    self.parse_float(&capture.as_str())
+                    self.parse_float(capture.as_str())
                 } else {
                     None
                 }
@@ -85,6 +85,26 @@ impl DataReader {
             }
         }
         MatchBar::new(rows)
+    }
+
+    pub fn read_terms(&self, path: &str, lines: usize) -> CommonTerms {
+        let mut terms = CommonTerms::new(lines);
+        let regex = self.regex.as_ref().unwrap();
+        for line in open_file(path).lines() {
+            match line {
+                Ok(as_string) => {
+                    if let Some(cap) = regex.captures(&as_string) {
+                        if let Some(name) = cap.name("value") {
+                            terms.observe(String::from(name.as_str()))
+                        } else if let Some(capture) = cap.get(1) {
+                            terms.observe(String::from(capture.as_str()))
+                        }
+                    };
+                }
+                Err(error) => error!("{}", error),
+            }
+        }
+        terms
     }
 }
 
@@ -179,5 +199,30 @@ mod tests {
         assert_eq!(mb.vec[1].count, 3);
         assert_eq!(mb.vec[2].label, "data");
         assert_eq!(mb.vec[2].count, 2);
+    }
+
+    #[test]
+    fn basic_term_reader() {
+        let re = Regex::new("^foo ([0-9.-]+) (?P<value>[0-9.-]+)").unwrap();
+        let reader = DataReaderBuilder::default().regex(re).build().unwrap();
+        let mut file = NamedTempFile::new().unwrap();
+        writeln!(file, "foo 1.1 1.6").unwrap();
+        writeln!(file, "foo 1.2 1.5").unwrap();
+        writeln!(file, "foo 1.3 1.6").unwrap();
+        writeln!(file, "foo 1.4 1.7").unwrap();
+        let ct = reader.read_terms(file.path().to_str().unwrap(), 10);
+        assert_eq!(ct.terms.len(), 3);
+        assert_eq!(*ct.terms.get(&String::from("1.5")).unwrap(), 1);
+        assert_eq!(*ct.terms.get(&String::from("1.6")).unwrap(), 2);
+        assert_eq!(*ct.terms.get(&String::from("1.7")).unwrap(), 1);
+        // Now, with no named capture group
+        let re = Regex::new("^foo ([0-9.-]+) ([0-9.-]+)").unwrap();
+        let reader = DataReaderBuilder::default().regex(re).build().unwrap();
+        let ct = reader.read_terms(file.path().to_str().unwrap(), 10);
+        assert_eq!(ct.terms.len(), 4);
+        assert_eq!(*ct.terms.get(&String::from("1.1")).unwrap(), 1);
+        assert_eq!(*ct.terms.get(&String::from("1.2")).unwrap(), 1);
+        assert_eq!(*ct.terms.get(&String::from("1.3")).unwrap(), 1);
+        assert_eq!(*ct.terms.get(&String::from("1.4")).unwrap(), 1);
     }
 }
