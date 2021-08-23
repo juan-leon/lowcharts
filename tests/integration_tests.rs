@@ -182,3 +182,29 @@ fn test_hist_negative_min() {
             "Samples = 2; Min = 2.4; Max = 4.2",
         ));
 }
+
+#[test]
+fn test_common() {
+    let mut cmd = Command::cargo_bin("lowcharts").unwrap();
+    match NamedTempFile::new() {
+        Ok(ref mut file) => {
+            writeln!(file, "foo").unwrap();
+            writeln!(file, "x").unwrap();
+            writeln!(file, "foo").unwrap();
+            writeln!(file, "x").unwrap();
+            writeln!(file, "foo").unwrap();
+            cmd.arg("--color")
+                .arg("no")
+                .arg("common-terms")
+                .arg(file.path().to_str().unwrap())
+                .arg("--lines")
+                .arg("4")
+                .assert()
+                .success()
+                .stdout(predicate::str::contains("Each ∎ represents a count of 1\n"))
+                .stdout(predicate::str::contains("\n[foo] [3] ∎∎∎\n"))
+                .stdout(predicate::str::contains("\n[  x] [2] ∎∎\n"));
+        }
+        Err(_) => assert!(false, "Could not create temp file"),
+    }
+}
