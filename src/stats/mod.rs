@@ -43,14 +43,14 @@ impl fmt::Display for Stats {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         writeln!(
             f,
-            "Samples = {len:.5}; Min = {min:.5}; Max = {max:.5}",
+            "Samples = {len}; Min = {min}; Max = {max}",
             len = Blue.paint(self.samples.to_string()),
             min = Blue.paint(self.min.to_string()),
             max = Blue.paint(self.max.to_string()),
         )?;
         writeln!(
             f,
-            "Average = {avg:.5}; Variance = {var:.5}; STD = {std:.5}",
+            "Average = {avg}; Variance = {var}; STD = {std}",
             avg = Blue.paint(self.avg.to_string()),
             var = Blue.paint(self.var.to_string()),
             std = Blue.paint(self.std.to_string())
@@ -85,5 +85,15 @@ mod tests {
         assert!(display.contains("Min = 1.1"));
         assert!(display.contains("Max = 3.3"));
         assert!(display.contains("Average = 2.2"));
+    }
+
+    #[test]
+    fn test_big_num() {
+        let stats = Stats::new(&[123456789.1234, 123456788.1234]);
+        Paint::disable();
+        let display = format!("{}", stats);
+        assert!(display.contains("Samples = 2"));
+        assert!(display.contains("Min = 123456788.1234"));
+        assert!(display.contains("Max = 123456789.1234"));
     }
 }
