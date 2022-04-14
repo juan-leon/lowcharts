@@ -13,18 +13,18 @@ categories = ["command-line-utilities", "text-processing"]
 license = "MIT"
 
 [dependencies]
-clap = "3.0.0-beta.2"
-yansi = "0.5.0"
-atty = "0.2"
-derive_builder = "0.10.0"
-regex = "1.4.5"
+clap = { version = "^3", features = ["cargo"] }
+yansi = "^0"
+atty = "^0"
+derive_builder = "^0"
+regex = "^1"
 chrono = "0.4"
-humantime = "2.1.0"
-simplelog = "^0.10.0"
+humantime = "^2"
+simplelog = "^0"
 log = "^0"
 
 [dev-dependencies]
 float_eq = "^0"
 tempfile = "3"
-assert_cmd = "1.0.3"
-predicates = "1.0.8"
+assert_cmd = "^2"
+predicates = "^2"

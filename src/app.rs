@@ -1,31 +1,31 @@
-use clap::{self, App, AppSettings, Arg};
+use clap::{self, Arg, Command};
 
-fn add_input(app: App) -> App {
-    app.arg(
+fn add_input(cmd: Command) -> Command {
+    cmd.arg(
         Arg::new("input")
-            .about("Input file")
+            .help("Input file")
             .default_value("-")
-            .long_about("If not present or a single dash, standard input will be used"),
+            .long_help("If not present or a single dash, standard input will be used"),
     )
 }
 
-fn add_input_as_option(app: App) -> App {
-    app.arg(
+fn add_input_as_option(cmd: Command) -> Command {
+    cmd.arg(
         Arg::new("input")
             .long("input")
             .default_value("-")
-            .long_about("If not present or a single dash, standard input will be used")
+            .long_help("If not present or a single dash, standard input will be used")
             .takes_value(true),
     )
 }
 
-fn add_min_max(app: App) -> App {
-    app.arg(
+fn add_min_max(cmd: Command) -> Command {
+    cmd.arg(
         Arg::new("max")
             .long("max")
             .short('M')
             .allow_hyphen_values(true)
-            .about("Filter out values bigger than this")
+            .help("Filter out values bigger than this")
             .takes_value(true),
     )
     .arg(
@@ -33,12 +33,12 @@ fn add_min_max(app: App) -> App {
             .long("min")
             .short('m')
             .allow_hyphen_values(true)
-            .about("Filter out values smaller than this")
+            .help("Filter out values smaller than this")
             .takes_value(true),
     )
 }
 
-fn add_regex(app: App) -> App {
+fn add_regex(cmd: Command) -> Command {
     const LONG_RE_ABOUT: &str = "\
 A regular expression used for capturing the values to be plotted inside input
 lines.
@@ -52,148 +52,142 @@ Examples of regex are ' 200 \\d+ ([0-9.]+)' (where there is one anonymous captur
 group) and 'a(a)? (?P<value>[0-9.]+)' (where there are two capture groups, and
 the named one will be used).
 ";
-    app.arg(
+    cmd.arg(
         Arg::new("regex")
             .long("regex")
             .short('R')
-            .about("Use a regex to capture input values")
-            .long_about(LONG_RE_ABOUT)
+            .help("Use a regex to capture input values")
+            .long_help(LONG_RE_ABOUT)
             .takes_value(true),
     )
 }
 
-fn add_non_capturing_regex(app: App) -> App {
-    app.arg(
+fn add_non_capturing_regex(cmd: Command) -> Command {
+    cmd.arg(
         Arg::new("regex")
             .long("regex")
             .short('R')
-            .about("Filter out lines where regex is not present")
+            .help("Filter out lines where regex is not present")
             .takes_value(true),
     )
 }
 
-fn add_width(app: App) -> App {
-    app.arg(
+fn add_width(cmd: Command) -> Command {
+    cmd.arg(
         Arg::new("width")
             .long("width")
             .short('w')
-            .about("Use this many characters as terminal width")
+            .help("Use this many characters as terminal width")
             .default_value("110")
             .takes_value(true),
     )
 }
 
-fn add_intervals(app: App) -> App {
-    app.arg(
+fn add_intervals(cmd: Command) -> Command {
+    cmd.arg(
         Arg::new("intervals")
             .long("intervals")
             .short('i')
-            .about("Use no more than this amount of buckets to classify data")
+            .help("Use no more than this amount of buckets to classify data")
             .default_value("20")
             .takes_value(true),
     )
 }
 
-pub fn get_app() -> App<'static> {
-    let mut hist = App::new("hist")
+pub fn get_app() -> Command<'static> {
+    let mut hist = Command::new("hist")
         .version(clap::crate_version!())
-        .setting(AppSettings::ColoredHelp)
         .about("Plot an histogram from input values");
     hist = add_input(add_regex(add_width(add_min_max(add_intervals(hist)))));
 
-    let mut plot = App::new("plot")
+    let mut plot = Command::new("plot")
         .version(clap::crate_version!())
-        .setting(AppSettings::ColoredHelp)
         .about("Plot an 2d x-y graph where y-values are averages of input values")
         .arg(
             Arg::new("height")
                 .long("height")
-                .short('h')
-                .about("Use that many `rows` for the plot")
+                .short('H')
+                .help("Use that many `rows` for the plot")
                 .default_value("40")
                 .takes_value(true),
         );
     plot = add_input(add_regex(add_width(add_min_max(plot))));
 
-    let mut matches = App::new("matches")
+    let mut matches = Command::new("matches")
         .version(clap::crate_version!())
-        .setting(AppSettings::ColoredHelp)
-        .setting(AppSettings::AllowMissingPositional)
+        .allow_missing_positional(true)
         .about("Plot barchar with counts of occurences of matches params");
     matches = add_input_as_option(add_width(matches)).arg(
         Arg::new("match")
-            .about("Count maches for those strings")
+            .help("Count maches for those strings")
             .required(true)
             .takes_value(true)
-            .multiple(true),
+            .multiple_occurrences(true),
     );
 
-    let mut timehist = App::new("timehist")
-        .version(clap::crate_version!())
-        .setting(AppSettings::ColoredHelp)
-        .about("Plot histogram with amount of matches over time")
-        .arg(
-            Arg::new("format")
-                .long("format")
-                .short('f')
-                .about("Use this string formatting")
-                .takes_value(true),
-        )
-        .arg(
-            Arg::new("duration")
-                .long("duration")
-                .about("Cap the time interval at that duration (example: '3h 5min')")
-                .takes_value(true),
-        )
-        .arg(Arg::new("early-stop").long("early-stop").about(
-            "If duration flag is used, assume monotonic times and stop as soon as possible",
-        ));
+    let mut timehist =
+        Command::new("timehist")
+            .version(clap::crate_version!())
+            .about("Plot histogram with amount of matches over time")
+            .arg(
+                Arg::new("format")
+                    .long("format")
+                    .short('f')
+                    .help("Use this string formatting")
+                    .takes_value(true),
+            )
+            .arg(
+                Arg::new("duration")
+                    .long("duration")
+                    .help("Cap the time interval at that duration (example: '3h 5min')")
+                    .takes_value(true),
+            )
+            .arg(Arg::new("early-stop").long("early-stop").help(
+                "If duration flag is used, assume monotonic times and stop as soon as possible",
+            ));
     timehist = add_input(add_width(add_non_capturing_regex(add_intervals(timehist))));
 
-    let mut splittimehist = App::new("split-timehist")
+    let mut splittimehist = Command::new("split-timehist")
         .version(clap::crate_version!())
-        .setting(AppSettings::ColoredHelp)
         .about("Plot histogram of with amount of matches over time, split per match type")
         .arg(
             Arg::new("format")
                 .long("format")
                 .short('f')
-                .about("Use this string formatting")
+                .help("Use this string formatting")
                 .takes_value(true),
         );
     splittimehist = add_input_as_option(add_width(add_intervals(splittimehist))).arg(
         Arg::new("match")
-            .about("Count maches for those strings")
+            .help("Count maches for those strings")
             .required(true)
             .takes_value(true)
-            .multiple(true),
+            .multiple_occurrences(true),
     );
 
-    let mut common_terms = App::new("common-terms")
+    let mut common_terms = Command::new("common-terms")
         .version(clap::crate_version!())
-        .setting(AppSettings::ColoredHelp)
         .about("Plot histogram with most common terms in input lines");
     common_terms = add_input(add_regex(add_width(common_terms))).arg(
         Arg::new("lines")
             .long("lines")
             .short('l')
-            .about("Display that many lines, sorting by most frequent")
+            .help("Display that many lines, sorting by most frequent")
             .default_value("10")
             .takes_value(true),
     );
 
-    App::new("lowcharts")
+    Command::new("lowcharts")
         .author(clap::crate_authors!())
         .version(clap::crate_version!())
         .about(clap::crate_description!())
         .max_term_width(100)
-        .setting(AppSettings::ColoredHelp)
-        .setting(AppSettings::SubcommandRequired)
+        .subcommand_required(true)
         .arg(
             Arg::new("color")
                 .short('c')
                 .long("color")
-                .about("Use colors in the output")
+                .help("Use colors in the output")
                 .possible_values(&["auto", "no", "yes"])
                 .default_value("auto")
                 .takes_value(true),
@@ -202,7 +196,7 @@ pub fn get_app() -> App<'static> {
             Arg::new("verbose")
                 .short('v')
                 .long("verbose")
-                .about("Be more verbose")
+                .help("Be more verbose")
                 .takes_value(false),
         )
         .subcommand(hist)
