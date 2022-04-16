@@ -3,6 +3,7 @@ use std::ops::Range;
 
 use yansi::Color::{Blue, Green, Red};
 
+use crate::format::F64Formatter;
 use crate::stats::Stats;
 
 #[derive(Debug)]
@@ -29,10 +30,11 @@ pub struct Histogram {
     top: usize,
     last: usize,
     stats: Stats,
+    precision: Option<usize>, // If None, then human friendly display will be used
 }
 
 impl Histogram {
-    pub fn new(size: usize, step: f64, stats: Stats) -> Histogram {
+    pub fn new(size: usize, step: f64, stats: Stats, precision: Option<usize>) -> Histogram {
         let mut vec = Vec::<Bucket>::with_capacity(size);
         let mut lower = stats.min;
         for _ in 0..size {
@@ -46,6 +48,7 @@ impl Histogram {
             top: 0,
             last: size - 1,
             stats,
+            precision,
         }
     }
 
@@ -74,8 +77,13 @@ impl Histogram {
 impl fmt::Display for Histogram {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{}", self.stats)?;
+        let formatter = match self.precision {
+            None => F64Formatter::new_with_range(self.stats.min..self.stats.max),
+            Some(n) => F64Formatter::new(n),
+        };
         let writer = HistWriter {
             width: f.width().unwrap_or(110),
+            formatter,
         };
         writer.write(f, self)
     }
@@ -83,11 +91,12 @@ impl fmt::Display for Histogram {
 
 struct HistWriter {
     width: usize,
+    formatter: F64Formatter,
 }
 
 impl HistWriter {
     pub fn write(&self, f: &mut fmt::Formatter, hist: &Histogram) -> fmt::Result {
-        let width_range = Self::get_width(hist);
+        let width_range = self.get_width(hist);
         let width_count = ((hist.top as f64).log10().ceil() as usize).max(1);
         let divisor = 1.max(hist.top / self.get_max_bar_len(width_range + width_count));
         writeln!(
@@ -114,9 +123,9 @@ impl HistWriter {
             f,
             "[{range}] [{count}] {bar}",
             range = Blue.paint(format!(
-                "{:width$.3} .. {:width$.3}",
-                bucket.range.start,
-                bucket.range.end,
+                "{:>width$} .. {:>width$}",
+                self.formatter.format(bucket.range.start),
+                self.formatter.format(bucket.range.end),
                 width = width,
             )),
             count = Green.paint(format!("{:width$}", bucket.count, width = width_count)),
@@ -124,10 +133,11 @@ impl HistWriter {
         )
     }
 
-    fn get_width(hist: &Histogram) -> usize {
-        format!("{:.3}", hist.stats.min)
+    fn get_width(&self, hist: &Histogram) -> usize {
+        self.formatter
+            .format(hist.stats.min)
             .len()
-            .max(format!("{:.3}", hist.max).len())
+            .max(self.formatter.format(hist.max).len())
     }
 
     fn get_max_bar_len(&self, fixed_width: usize) -> usize {
@@ -147,8 +157,8 @@ mod tests {
 
     #[test]
     fn test_buckets() {
-        let stats = Stats::new(&[-2.0, 14.0]);
-        let mut hist = Histogram::new(8, 2.5, stats);
+        let stats = Stats::new(&[-2.0, 14.0], None);
+        let mut hist = Histogram::new(8, 2.5, stats, None);
         hist.load(&[
             -1.0, -1.1, 2.0, 2.0, 2.1, -0.9, 11.0, 11.2, 1.9, 1.99, 1.98, 1.97, 1.96,
         ]);
@@ -164,15 +174,15 @@ mod tests {
 
     #[test]
     fn test_buckets_bad_stats() {
-        let mut hist = Histogram::new(6, 1.0, Stats::new(&[-2.0, 4.0]));
+        let mut hist = Histogram::new(6, 1.0, Stats::new(&[-2.0, 4.0], None), None);
         hist.load(&[-1.0, 2.0, -1.0, 2.0, 10.0, 10.0, 10.0, -10.0]);
         assert_eq!(hist.top, 2);
     }
 
     #[test]
     fn display_test() {
-        let stats = Stats::new(&[-2.0, 14.0]);
-        let mut hist = Histogram::new(8, 2.5, stats);
+        let stats = Stats::new(&[-2.0, 14.0], None);
+        let mut hist = Histogram::new(8, 2.5, stats, Some(3));
         hist.load(&[
             -1.0, -1.1, 2.0, 2.0, 2.1, -0.9, 11.0, 11.2, 1.9, 1.99, 1.98, 1.97, 1.96,
         ]);
@@ -185,12 +195,42 @@ mod tests {
 
     #[test]
     fn display_test_bad_width() {
-        let mut hist = Histogram::new(8, 2.5, Stats::new(&[-2.0, 14.0]));
+        let mut hist = Histogram::new(8, 2.5, Stats::new(&[-2.0, 14.0], None), Some(3));
         hist.load(&[
             -1.0, -1.1, 2.0, 2.0, 2.1, -0.9, 11.0, 11.2, 1.9, 1.99, 1.98, 1.97, 1.96,
         ]);
         Paint::disable();
         let display = format!("{:2}", hist);
         assert!(display.contains("[-2.000 ..  0.500] [3] ∎∎∎\n"));
+    }
+
+    #[test]
+    fn display_test_human_units() {
+        let vector = &[
+            -1.0,
+            -12000000.0,
+            -12000001.0,
+            -12000002.0,
+            -12000003.0,
+            -2000000.0,
+            500000.0,
+            500000.0,
+        ];
+        let intervals = vector.len();
+        let stats = Stats::new(vector, None);
+        let mut hist = Histogram::new(
+            intervals,
+            (stats.max - stats.min) / intervals as f64,
+            stats,
+            None,
+        );
+        hist.load(vector);
+        Paint::disable();
+        let display = format!("{}", hist);
+        assert!(display.contains("[-12.0 M .. -10.4 M] [4] ∎∎∎∎\n"));
+        assert!(display.contains("[ -2.6 M ..  -1.1 M] [1] ∎\n"));
+        assert!(display.contains("[ -1.1 M ..   0.5 M] [3] ∎∎∎\n"));
+        assert!(display.contains("Samples = 8; Min = -12.0 M; Max = 0.5 M"));
+        assert!(display.contains("Average = -6.1 M;"));
     }
 }

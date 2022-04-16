@@ -1,4 +1,5 @@
 mod app;
+mod format;
 mod plot;
 mod read;
 mod stats;
@@ -108,13 +109,23 @@ fn histogram(matches: &ArgMatches) -> i32 {
     if !assert_data(&vec, 1) {
         return 1;
     }
-    let stats = stats::Stats::new(&vec);
+    let precision_arg: i32 = matches.value_of_t("precision").unwrap();
+    let precision = if precision_arg < 0 {
+        None
+    } else {
+        Some(precision_arg as usize)
+    };
+    let stats = stats::Stats::new(&vec, precision);
     let width = matches.value_of_t("width").unwrap();
     let mut intervals: usize = matches.value_of_t("intervals").unwrap();
 
     intervals = intervals.min(vec.len());
-    let mut histogram =
-        plot::Histogram::new(intervals, (stats.max - stats.min) / intervals as f64, stats);
+    let mut histogram = plot::Histogram::new(
+        intervals,
+        (stats.max - stats.min) / intervals as f64,
+        stats,
+        precision,
+    );
     histogram.load(&vec);
     print!("{:width$}", histogram, width = width);
     0
@@ -130,10 +141,17 @@ fn plot(matches: &ArgMatches) -> i32 {
     if !assert_data(&vec, 1) {
         return 1;
     }
+    let precision_arg: i32 = matches.value_of_t("precision").unwrap();
+    let precision = if precision_arg < 0 {
+        None
+    } else {
+        Some(precision_arg as usize)
+    };
     let mut plot = plot::XyPlot::new(
         matches.value_of_t("width").unwrap(),
         matches.value_of_t("height").unwrap(),
-        stats::Stats::new(&vec),
+        stats::Stats::new(&vec, precision),
+        precision,
     );
     plot.load(&vec);
     print!("{}", plot);

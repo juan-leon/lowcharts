@@ -94,11 +94,24 @@ fn add_intervals(cmd: Command) -> Command {
     )
 }
 
+fn add_precision(cmd: Command) -> Command {
+    cmd.arg(
+        Arg::new("precision")
+            .long("precision")
+            .short('p')
+            .help("Show that number of decimals (if omitted, 'human' units will be used)")
+            .default_value("-1")
+            .takes_value(true),
+    )
+}
+
 pub fn get_app() -> Command<'static> {
     let mut hist = Command::new("hist")
         .version(clap::crate_version!())
         .about("Plot an histogram from input values");
-    hist = add_input(add_regex(add_width(add_min_max(add_intervals(hist)))));
+    hist = add_input(add_regex(add_width(add_min_max(add_precision(
+        add_intervals(hist),
+    )))));
 
     let mut plot = Command::new("plot")
         .version(clap::crate_version!())
@@ -111,7 +124,7 @@ pub fn get_app() -> Command<'static> {
                 .default_value("40")
                 .takes_value(true),
         );
-    plot = add_input(add_regex(add_width(add_min_max(plot))));
+    plot = add_input(add_regex(add_width(add_min_max(add_precision(plot)))));
 
     let mut matches = Command::new("matches")
         .version(clap::crate_version!())

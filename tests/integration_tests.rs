@@ -83,8 +83,24 @@ fn test_hist() {
         .assert()
         .success()
         .stdout(predicate::str::contains(
-            "Samples = 2; Min = 2.4; Max = 4.2",
+            "Samples = 2; Min = 2.400; Max = 4.200",
         ));
+}
+
+#[test]
+fn test_hist_human() {
+    let mut cmd = Command::cargo_bin("lowcharts").unwrap();
+    cmd.arg("hist")
+        .arg("--min")
+        .arg("1")
+        .write_stdin("42000000\n24000000\n")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains(
+            "Samples = 2; Min = 24.0 M; Max = 42.0 M",
+        ))
+        .stdout(predicate::str::contains("\n[24.0 M .. 33.0 M] [1] ∎\n"))
+        .stdout(predicate::str::contains("\n[33.0 M .. 42.0 M] [1] ∎\n"));
 }
 
 #[test]
@@ -156,11 +172,47 @@ fn test_plot() {
                 .arg("4")
                 .assert()
                 .success()
-                .stdout(predicate::str::contains("Samples = 4; Min = 1; Max = 4\n"))
+                .stdout(predicate::str::contains(
+                    "Samples = 4; Min = 1.000; Max = 4.000\n",
+                ))
                 .stdout(predicate::str::contains("\n[3.250]    ●"))
                 .stdout(predicate::str::contains("\n[2.500]   ●"))
                 .stdout(predicate::str::contains("\n[1.750]  ●"))
                 .stdout(predicate::str::contains("\n[1.000] ●"))
+                .stderr(predicate::str::contains("[DEBUG] Cannot parse float"));
+        }
+        Err(_) => assert!(false, "Could not create temp file"),
+    }
+}
+
+#[test]
+fn test_plot_precision() {
+    let mut cmd = Command::cargo_bin("lowcharts").unwrap();
+    match NamedTempFile::new() {
+        Ok(ref mut file) => {
+            writeln!(file, "1").unwrap();
+            writeln!(file, "2").unwrap();
+            writeln!(file, "3").unwrap();
+            writeln!(file, "4").unwrap();
+            writeln!(file, "none").unwrap();
+            cmd.arg("--verbose")
+                .arg("--color")
+                .arg("no")
+                .arg("plot")
+                .arg(file.path().to_str().unwrap())
+                .arg("--height")
+                .arg("4")
+                .arg("--precision")
+                .arg("1")
+                .assert()
+                .success()
+                .stdout(predicate::str::contains(
+                    "Samples = 4; Min = 1.0; Max = 4.0\n",
+                ))
+                .stdout(predicate::str::contains("\n[3.2]    ●"))
+                .stdout(predicate::str::contains("\n[2.5]   ●"))
+                .stdout(predicate::str::contains("\n[1.8]  ●"))
+                .stdout(predicate::str::contains("\n[1.0] ●"))
                 .stderr(predicate::str::contains("[DEBUG] Cannot parse float"));
         }
         Err(_) => assert!(false, "Could not create temp file"),
@@ -179,7 +231,7 @@ fn test_hist_negative_min() {
         .assert()
         .success()
         .stdout(predicate::str::contains(
-            "Samples = 2; Min = 2.4; Max = 4.2",
+            "Samples = 2; Min = 2.400; Max = 4.200",
         ));
 }
 

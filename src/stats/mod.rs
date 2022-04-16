@@ -2,6 +2,8 @@ use std::fmt;
 
 use yansi::Color::Blue;
 
+use crate::format::F64Formatter;
+
 #[derive(Debug)]
 pub struct Stats {
     pub min: f64,
@@ -11,10 +13,11 @@ pub struct Stats {
     pub var: f64,
     pub sum: f64,
     pub samples: usize,
+    pub precision: Option<usize>, // If None, then human friendly display will be used
 }
 
 impl Stats {
-    pub fn new(vec: &[f64]) -> Stats {
+    pub fn new(vec: &[f64], precision: Option<usize>) -> Stats {
         let mut max = vec[0];
         let mut min = max;
         let mut temp: f64 = 0.0;
@@ -35,25 +38,30 @@ impl Stats {
             var,
             sum,
             samples: vec.len(),
+            precision,
         }
     }
 }
 
 impl fmt::Display for Stats {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let formatter = match self.precision {
+            None => F64Formatter::new_with_range(self.min..self.max),
+            Some(n) => F64Formatter::new(n),
+        };
         writeln!(
             f,
             "Samples = {len}; Min = {min}; Max = {max}",
             len = Blue.paint(self.samples.to_string()),
-            min = Blue.paint(self.min.to_string()),
-            max = Blue.paint(self.max.to_string()),
+            min = Blue.paint(formatter.format(self.min)),
+            max = Blue.paint(formatter.format(self.max)),
         )?;
         writeln!(
             f,
             "Average = {avg}; Variance = {var}; STD = {std}",
-            avg = Blue.paint(self.avg.to_string()),
-            var = Blue.paint(self.var.to_string()),
-            std = Blue.paint(self.std.to_string())
+            avg = Blue.paint(formatter.format(self.avg)),
+            var = Blue.paint(format!("{:.3}", self.var)),
+            std = Blue.paint(format!("{:.3}", self.std)),
         )
     }
 }
@@ -66,7 +74,7 @@ mod tests {
 
     #[test]
     fn basic_test() {
-        let stats = Stats::new(&[1.1, 3.3, 2.2]);
+        let stats = Stats::new(&[1.1, 3.3, 2.2], Some(3));
         assert_eq!(3_usize, stats.samples);
         assert_float_eq!(stats.sum, 6.6, rmax <= f64::EPSILON);
         assert_float_eq!(stats.avg, 2.2, rmax <= f64::EPSILON);
@@ -78,22 +86,22 @@ mod tests {
 
     #[test]
     fn test_display() {
-        let stats = Stats::new(&[1.1, 3.3, 2.2]);
+        let stats = Stats::new(&[1.1, 3.3, 2.2], Some(3));
         Paint::disable();
         let display = format!("{}", stats);
         assert!(display.contains("Samples = 3"));
-        assert!(display.contains("Min = 1.1"));
-        assert!(display.contains("Max = 3.3"));
-        assert!(display.contains("Average = 2.2"));
+        assert!(display.contains("Min = 1.100"));
+        assert!(display.contains("Max = 3.300"));
+        assert!(display.contains("Average = 2.200"));
     }
 
     #[test]
     fn test_big_num() {
-        let stats = Stats::new(&[123456789.1234, 123456788.1234]);
+        let stats = Stats::new(&[123456789.1234, 123456788.1234], None);
         Paint::disable();
         let display = format!("{}", stats);
         assert!(display.contains("Samples = 2"));
-        assert!(display.contains("Min = 123456788.1234"));
-        assert!(display.contains("Max = 123456789.1234"));
+        assert!(display.contains("Min = 123456788.123"));
+        assert!(display.contains("Max = 123456789.123"));
     }
 }
