@@ -71,7 +71,13 @@ impl TimeHistogram {
             None
         } else {
             let x = (ts - self.min).num_microseconds().unwrap() as u64;
-            Some(((x * self.vec.len() as u64 / self.nanos) as usize).min(self.last))
+            if self.nanos == 0 {
+                // All timestamps are the same.  We will have a degenrate plot
+                // (as opposed to failing hard).
+                Some(0)
+            } else {
+                Some(((x * self.vec.len() as u64 / self.nanos) as usize).min(self.last))
+            }
         }
     }
 }
@@ -149,5 +155,20 @@ mod tests {
         assert!(display.contains("[04:25:00.002250] [0] \n"));
         assert!(display.contains("[04:25:00.003500] [0] \n"));
         assert!(display.contains("[04:25:00.004750] [1] ∎\n"));
+    }
+
+    #[test]
+    fn test_single_timestamp() {
+        Paint::disable();
+        let mut vec = Vec::<DateTime<FixedOffset>>::new();
+        vec.push(DateTime::parse_from_rfc3339("2022-04-15T04:25:00.001+00:00").unwrap());
+        vec.push(DateTime::parse_from_rfc3339("2022-04-15T04:25:00.001+00:00").unwrap());
+        let mut th = TimeHistogram::new(4, &vec);
+        th.load(&vec);
+        let display = format!("{}", th);
+        assert!(display.contains("Matches: 2"));
+        assert!(display.contains("represents a count of 1"));
+        assert!(display.contains("[04:25:00.001000] [2] ∎∎\n"));
+        assert!(display.contains("[04:25:00.001000] [0] \n"));
     }
 }
