@@ -1,6 +1,6 @@
 [package]
 name = "lowcharts"
-version = "0.4.3"
+version = "0.4.4"
 authors = ["JuanLeon Lahoz <juanleon.lahoz@gmail.com>"]
 edition = "2018"
 description = "Tool to draw low-resolution graphs in terminal"
@@ -17,7 +17,7 @@ clap = { version = "^3", features = ["cargo"] }
 yansi = "^0"
 atty = "^0"
 derive_builder = "^0"
-regex = "^1"
+regex = "^1.5"
 chrono = "0.4"
 humantime = "^2"
 simplelog = "^0"
