@@ -3,6 +3,8 @@ use std::fmt;
 use yansi::Color::{Blue, Green, Red};
 
 #[derive(Debug)]
+/// A struct that represents a single match bar of a match bar histogram (a
+/// bucket for a term/label).
 pub struct MatchBarRow {
     pub label: String,
     pub count: usize,
@@ -24,6 +26,8 @@ impl MatchBarRow {
 }
 
 #[derive(Debug)]
+/// A struct holding data to plot a MatchBar: a histogram of the number of
+/// occurrences of a set of strings in some input dara.
 pub struct MatchBar {
     pub vec: Vec<MatchBarRow>,
     top_values: usize,
@@ -31,6 +35,7 @@ pub struct MatchBar {
 }
 
 impl MatchBar {
+    /// Creates a Histogram from a vector of MatchBarRow elements.
     pub fn new(vec: Vec<MatchBarRow>) -> MatchBar {
         let mut top_lenght: usize = 0;
         let mut top_values: usize = 0;

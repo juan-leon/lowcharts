@@ -4,12 +4,20 @@ use std::fmt;
 use yansi::Color::{Blue, Green, Red};
 
 #[derive(Debug)]
+/// A struct holding data to plot a Histogram of the most frequent terms in an
+/// arbitrary input.
+///
+/// The struct is create empty and it will fill its data by calling its
+/// `observe` method.
 pub struct CommonTerms {
     pub terms: HashMap<String, usize>,
     lines: usize,
 }
 
 impl CommonTerms {
+    /// Create and empty `CommonTerms`.
+    ///
+    /// `lines` is the number of lines to be displayed.
     pub fn new(lines: usize) -> CommonTerms {
         CommonTerms {
             terms: HashMap::new(),
@@ -17,6 +25,7 @@ impl CommonTerms {
         }
     }
 
+    /// Observe a new "term".
     pub fn observe(&mut self, term: String) {
         *self.terms.entry(term).or_insert(0) += 1
     }

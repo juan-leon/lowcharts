@@ -115,18 +115,9 @@ fn histogram(matches: &ArgMatches) -> i32 {
     } else {
         Some(precision_arg as usize)
     };
-    let stats = stats::Stats::new(&vec, precision);
     let width = matches.value_of_t("width").unwrap();
-    let mut intervals: usize = matches.value_of_t("intervals").unwrap();
-
-    intervals = intervals.min(vec.len());
-    let mut histogram = plot::Histogram::new(
-        intervals,
-        (stats.max - stats.min) / intervals as f64,
-        stats,
-        precision,
-    );
-    histogram.load(&vec);
+    let intervals: usize = matches.value_of_t("intervals").unwrap();
+    let histogram = plot::Histogram::new(&vec, intervals, precision);
     print!("{:width$}", histogram, width = width);
     0
 }
@@ -147,13 +138,12 @@ fn plot(matches: &ArgMatches) -> i32 {
     } else {
         Some(precision_arg as usize)
     };
-    let mut plot = plot::XyPlot::new(
+    let plot = plot::XyPlot::new(
+        &vec,
         matches.value_of_t("width").unwrap(),
         matches.value_of_t("height").unwrap(),
-        stats::Stats::new(&vec, precision),
         precision,
     );
-    plot.load(&vec);
     print!("{}", plot);
     0
 }
@@ -235,8 +225,7 @@ fn timehist(matches: &ArgMatches) -> i32 {
     let reader = builder.build().unwrap();
     let vec = reader.read(matches.value_of("input").unwrap());
     if assert_data(&vec, 2) {
-        let mut timehist = plot::TimeHistogram::new(matches.value_of_t("intervals").unwrap(), &vec);
-        timehist.load(&vec);
+        let timehist = plot::TimeHistogram::new(matches.value_of_t("intervals").unwrap(), &vec);
         print!("{:width$}", timehist, width = width);
     };
     0

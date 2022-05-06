@@ -12,6 +12,15 @@ keywords = ["regex", "grep", "data", "troubleshooting", "graph", "text", "consol
 categories = ["command-line-utilities", "text-processing"]
 license = "MIT"
 
+[lib]
+name = "lowcharts"
+path = "src/lib.rs"
+
+[[bin]]
+name = "lowcharts"
+path = "src/main.rs"
+
+
 [dependencies]
 clap = { version = "^3", features = ["cargo"] }
 yansi = "^0"

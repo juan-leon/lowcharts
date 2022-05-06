@@ -149,6 +149,34 @@ of a metric over time, but not the speed of that evolution.
 
 There is regex support for this type of plots.
 
+### Using it as a library
+
+`lowcharts` can be used as a library by any code that needs to display text
+based charts.
+
+```toml
+[dependencies]
+lowcharts = "*"
+```
+
+Example:
+
+```rust
+// use lowcharts::plot;
+let vec = &[-1.0, -1.1, 2.0, 2.0, 2.1, -0.9, 11.0, 11.2, 1.9, 1.99, 1.98, 1.97, 1.96];
+// Plot a histogram of the above vector, with 4 buckets and a precision
+// choosen by library
+let histogram = plot::Histogram::new(vec, 4, None);
+print!("{}", histogram);
+```
+
+You can disable coloring by doing:
+
+```rust
+// use yansi::Paint;
+Paint::disable();
+```
+
 ### Installing
 
 #### Via release

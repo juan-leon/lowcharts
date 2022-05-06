@@ -31,6 +31,8 @@ impl TimeBucket {
 }
 
 #[derive(Debug)]
+/// A struct holding data to plot a split time histogram, where the display
+/// shows the frequency of selected terms over time.
 pub struct SplitTimeHistogram {
     vec: Vec<TimeBucket>,
     strings: Vec<String>,
@@ -42,6 +44,13 @@ pub struct SplitTimeHistogram {
 }
 
 impl SplitTimeHistogram {
+    /// Creates a SplitTimeHistogram from a vector of `strings` (the terms whose
+    /// frequency we want to display) and a vector of timestamps where the terms
+    /// appear.
+    ///
+    /// `size` is the number of time slots in the histogram.  Parameter 'ts' is
+    /// a slice of tuples of DateTime (the timestamp of a term occurrence) and
+    /// the index of the term in the `strings` parameter.
     pub fn new(
         size: usize,
         strings: Vec<String>,
@@ -68,13 +77,18 @@ impl SplitTimeHistogram {
         sth
     }
 
-    fn load(&mut self, vec: &[(DateTime<FixedOffset>, usize)]) {
+    /// Add to the `SplitTimeHistogram` data the values of a slice of tuples of
+    /// DateTime (the timestamp of a term occurrence) and the index of the term
+    /// in the in the list of common terms.
+    pub fn load(&mut self, vec: &[(DateTime<FixedOffset>, usize)]) {
         for x in vec {
             self.add(x.0, x.1);
         }
     }
 
-    fn add(&mut self, ts: DateTime<FixedOffset>, index: usize) {
+    /// Add to the `SplitTimeHistogram` data another data point (a timestamp and
+    /// index of the term in the list of common terms).
+    pub fn add(&mut self, ts: DateTime<FixedOffset>, index: usize) {
         if let Some(slot) = self.find_slot(ts) {
             self.vec[slot].inc(index);
         }
@@ -89,7 +103,7 @@ impl SplitTimeHistogram {
         }
     }
 
-    // Clippy gets badly confused necause self.strings and COLORS may have
+    // Clippy gets badly confused because self.strings and COLORS may have
     // different lengths
     #[allow(clippy::needless_range_loop)]
     fn fmt_row(

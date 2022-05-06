@@ -5,18 +5,30 @@ use yansi::Color::Blue;
 use crate::format::F64Formatter;
 
 #[derive(Debug)]
+/// A struct holding statistical data regarding a unsorted set of numerical
+/// values.
 pub struct Stats {
+    /// Minimum of the input values.
     pub min: f64,
+    /// Maximum of the input values.
     pub max: f64,
+    /// Average of the input values.
     pub avg: f64,
+    /// Standard deviation of the input values.
     pub std: f64,
+    /// Variance of the input values.
     pub var: f64,
-    pub sum: f64,
+    /// Number of samples of the input values.
     pub samples: usize,
-    pub precision: Option<usize>, // If None, then human friendly display will be used
+    precision: Option<usize>, // If None, then human friendly display will be used
 }
 
 impl Stats {
+    /// Creates a Stats struct from a vector of numerical data.
+    ///
+    /// `precision` is an Option with the number of decimals to display.  If
+    /// "None" is used, human units will be used, with an heuristic based on the
+    /// input data for deciding the units and the decimal places.
     pub fn new(vec: &[f64], precision: Option<usize>) -> Stats {
         let mut max = vec[0];
         let mut min = max;
@@ -36,7 +48,6 @@ impl Stats {
             avg,
             std,
             var,
-            sum,
             samples: vec.len(),
             precision,
         }
@@ -76,7 +87,6 @@ mod tests {
     fn basic_test() {
         let stats = Stats::new(&[1.1, 3.3, 2.2], Some(3));
         assert_eq!(3_usize, stats.samples);
-        assert_float_eq!(stats.sum, 6.6, rmax <= f64::EPSILON);
         assert_float_eq!(stats.avg, 2.2, rmax <= f64::EPSILON);
         assert_float_eq!(stats.min, 1.1, rmax <= f64::EPSILON);
         assert_float_eq!(stats.max, 3.3, rmax <= f64::EPSILON);

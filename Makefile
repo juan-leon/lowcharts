@@ -13,3 +13,6 @@ test:
 # assert_cmd, as it does not follow forks
 coverage:
 	cargo tarpaulin -o Html --ignore-tests -- --test-threads 1
+
+doc:
+	cargo doc -p lowcharts

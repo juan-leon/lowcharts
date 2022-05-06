@@ -22,6 +22,7 @@ impl TimeBucket {
 }
 
 #[derive(Debug)]
+/// A struct holding data to plot a TimeHistogram of timestamp data.
 pub struct TimeHistogram {
     vec: Vec<TimeBucket>,
     min: DateTime<FixedOffset>,
@@ -33,6 +34,9 @@ pub struct TimeHistogram {
 }
 
 impl TimeHistogram {
+    /// Creates a Histogram from a vector of DateTime elements.
+    ///
+    /// `size` is the number of histogram buckets to display.
     pub fn new(size: usize, ts: &[DateTime<FixedOffset>]) -> TimeHistogram {
         let mut vec = Vec::<TimeBucket>::with_capacity(size);
         let min = *ts.iter().min().unwrap();
@@ -42,7 +46,7 @@ impl TimeHistogram {
         for i in 0..size {
             vec.push(TimeBucket::new(min + (inc * i as i32)));
         }
-        TimeHistogram {
+        let mut timehist = TimeHistogram {
             vec,
             min,
             max,
@@ -50,15 +54,23 @@ impl TimeHistogram {
             top: 0,
             last: size - 1,
             nanos: (max - min).num_microseconds().unwrap() as u64,
-        }
+        };
+        timehist.load(ts);
+        timehist
     }
 
+    /// Add to the `TimeHistogram` data the values of a slice of DateTime
+    /// elements.  Elements not in the initial range (the one passed to `new`)
+    /// will be silently discarded.
     pub fn load(&mut self, vec: &[DateTime<FixedOffset>]) {
         for x in vec {
             self.add(*x);
         }
     }
 
+    /// Add to the `TimeHistogram` another DateTime element.  If element is not
+    /// in the initial range (the one passed to `new`), it will be silently
+    /// discarded.
     pub fn add(&mut self, ts: DateTime<FixedOffset>) {
         if let Some(slot) = self.find_slot(ts) {
             self.vec[slot].inc();
@@ -129,8 +141,7 @@ mod tests {
         vec.push(DateTime::parse_from_rfc3339("2022-04-15T04:25:00+00:00").unwrap());
         vec.push(DateTime::parse_from_rfc3339("2022-04-15T04:25:00+00:00").unwrap());
         vec.push(DateTime::parse_from_rfc3339("2023-04-15T04:25:00+00:00").unwrap());
-        let mut th = TimeHistogram::new(3, &vec);
-        th.load(&vec);
+        let th = TimeHistogram::new(3, &vec);
         let display = format!("{}", th);
         assert!(display.contains("Matches: 5"));
         assert!(display.contains("represents a count of 1"));
@@ -146,8 +157,7 @@ mod tests {
         vec.push(DateTime::parse_from_rfc3339("2022-04-15T04:25:00.001+00:00").unwrap());
         vec.push(DateTime::parse_from_rfc3339("2022-04-15T04:25:00.002+00:00").unwrap());
         vec.push(DateTime::parse_from_rfc3339("2022-04-15T04:25:00.006+00:00").unwrap());
-        let mut th = TimeHistogram::new(4, &vec);
-        th.load(&vec);
+        let th = TimeHistogram::new(4, &vec);
         let display = format!("{}", th);
         assert!(display.contains("Matches: 3"));
         assert!(display.contains("represents a count of 1"));
@@ -163,8 +173,7 @@ mod tests {
         let mut vec = Vec::<DateTime<FixedOffset>>::new();
         vec.push(DateTime::parse_from_rfc3339("2022-04-15T04:25:00.001+00:00").unwrap());
         vec.push(DateTime::parse_from_rfc3339("2022-04-15T04:25:00.001+00:00").unwrap());
-        let mut th = TimeHistogram::new(4, &vec);
-        th.load(&vec);
+        let th = TimeHistogram::new(4, &vec);
         let display = format!("{}", th);
         assert!(display.contains("Matches: 2"));
         assert!(display.contains("represents a count of 1"));

@@ -7,6 +7,7 @@ use crate::format::F64Formatter;
 use crate::stats::Stats;
 
 #[derive(Debug)]
+/// A struct holding data to plot a XY graph.
 pub struct XyPlot {
     x_axis: Vec<f64>,
     y_axis: Vec<f64>,
@@ -17,7 +18,36 @@ pub struct XyPlot {
 }
 
 impl XyPlot {
-    pub fn new(width: usize, height: usize, stats: Stats, precision: Option<usize>) -> XyPlot {
+    /// Creates a XyPlot from a vector of numerical data.
+    ///
+    /// `width` is the number of "columns" to display (capped to the length of
+    /// input data).  The data in every column is the average of the y-values
+    /// that would be aggregated into the x-value of the column (every column
+    /// has a width of a character).
+    ///
+    /// `height` is the number of "rows" to display (every row has a height of a
+    /// character).
+    ///
+    /// `precision` is an Option with the number of decimals to display.  If
+    /// "None" is used, human units will be used, with an heuristic based on the
+    /// input data for deciding the units and the decimal places.
+    pub fn new(vec: &[f64], width: usize, height: usize, precision: Option<usize>) -> XyPlot {
+        let mut plot = XyPlot::new_with_stats(width, height, Stats::new(vec, precision), precision);
+        plot.load(vec);
+        plot
+    }
+
+    /// Creates a XyPlot with no input data.
+    ///
+    /// Parameters are similar to those on the `new` method, but a parameter
+    /// named `stats` is needed to decide how future data (to be injected with
+    /// the load method) will be accommodated.
+    pub fn new_with_stats(
+        width: usize,
+        height: usize,
+        stats: Stats,
+        precision: Option<usize>,
+    ) -> XyPlot {
         XyPlot {
             x_axis: Vec::with_capacity(width),
             y_axis: Vec::with_capacity(height),
@@ -28,6 +58,7 @@ impl XyPlot {
         }
     }
 
+    /// Add to the `XyPlot` data the values of a slice of numerical data.
     pub fn load(&mut self, vec: &[f64]) {
         self.width = self.width.min(vec.len());
         let num_chunks = vec.len() / self.width;
@@ -103,7 +134,7 @@ mod tests {
     #[test]
     fn basic_test() {
         let stats = Stats::new(&[-1.0, 4.0], None);
-        let mut plot = XyPlot::new(3, 5, stats, Some(3));
+        let mut plot = XyPlot::new_with_stats(3, 5, stats, Some(3));
         plot.load(&[-1.0, 0.0, 1.0, 2.0, 3.0, 4.0, -1.0]);
         assert_float_eq!(plot.x_axis[0], -0.5, rmax <= f64::EPSILON);
         assert_float_eq!(plot.x_axis[1], 1.5, rmax <= f64::EPSILON);
@@ -117,7 +148,7 @@ mod tests {
     #[test]
     fn display_test() {
         let stats = Stats::new(&[-1.0, 4.0], None);
-        let mut plot = XyPlot::new(3, 5, stats, Some(3));
+        let mut plot = XyPlot::new_with_stats(3, 5, stats, Some(3));
         plot.load(&[-1.0, 0.0, 1.0, 2.0, 3.0, 4.0, -1.0]);
         Paint::disable();
         let display = format!("{}", plot);
@@ -130,9 +161,7 @@ mod tests {
     #[test]
     fn display_test_human_units() {
         let vector = &[1000000.0, -1000000.0, -2000000.0, -4000000.0];
-        let stats = Stats::new(vector, None);
-        let mut plot = XyPlot::new(3, 5, stats, None);
-        plot.load(vector);
+        let plot = XyPlot::new(vector, 3, 5, None);
         Paint::disable();
         let display = format!("{}", plot);
         assert!(display.contains("[    0 K] ●   "));
