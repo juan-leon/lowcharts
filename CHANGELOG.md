@@ -1,3 +1,11 @@
+0.5.0
+=====
+
+Features:
+
+* Allow to be use the `lowcharts` as a library.  See README for an example, and
+  documentation for API details.
+
 0.4.4
 =====
 
