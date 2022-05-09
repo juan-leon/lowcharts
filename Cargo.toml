@@ -13,12 +13,12 @@ categories = ["command-line-utilities", "text-processing"]
 license = "MIT"
 
 [lib]
-name = "lowcharts"
-path = "src/lib.rs"
+  name = "lowcharts"
+  path = "src/lib.rs"
 
 [[bin]]
-name = "lowcharts"
-path = "src/main.rs"
+  name = "lowcharts"
+  path = "src/main.rs"
 
 
 [dependencies]
