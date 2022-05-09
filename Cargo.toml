@@ -8,7 +8,7 @@ documentation = "https://github.com/juan-leon/lowcharts/"
 homepage = "https://github.com/juan-leon/lowcharts/"
 repository = "https://github.com/juan-leon/lowcharts/"
 readme = "README.md"
-keywords = ["regex", "grep", "data", "troubleshooting", "graph", "text", "console"]
+keywords = ["grep", "troubleshooting", "graph", "text", "console"]
 categories = ["command-line-utilities", "text-processing"]
 license = "MIT"
 
