@@ -1,10 +1,15 @@
+0.5.2
+=====
+
+Doc improvements
+
 0.5.0
 =====
 
 Features:
 
-* Allow to be use the `lowcharts` as a library.  See README for an example, and
-  documentation for API details.
+* Allow to be use the `lowcharts` as a library.  See README for an example.  API
+  documentation: https://docs.rs/lowcharts/latest/lowcharts/
 
 0.4.4
 =====
