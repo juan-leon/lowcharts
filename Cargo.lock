@@ -301,7 +301,7 @@ dependencies = [
 
 [[package]]
 name = "lowcharts"
-version = "0.5.0"
+version = "0.5.2"
 dependencies = [
  "assert_cmd",
  "atty",

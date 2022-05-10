@@ -149,6 +149,21 @@ of a metric over time, but not the speed of that evolution.
 
 There is regex support for this type of plots.
 
+### Installing
+
+#### Via release
+
+Go over https://github.com/juan-leon/lowcharts/releases/ and download the binary
+you want.  Decompress the file and copy the binary to your path.
+
+#### Via local compilation
+
+```
+$ git clone https://github.com/juan-leon/lowcharts
+$ cd lowcharts
+$ cargo install --path .
+```
+
 ### Using it as a library
 
 `lowcharts` can be used as a library by any code that needs to display text
@@ -177,20 +192,7 @@ You can disable coloring by doing:
 Paint::disable();
 ```
 
-### Installing
-
-#### Via release
-
-Go over https://github.com/juan-leon/lowcharts/releases/ and download the binary
-you want.  Decompress the file and copy the binary to your path.
-
-#### Via local compilation
-
-```
-$ git clone https://github.com/juan-leon/lowcharts
-$ cd lowcharts
-$ cargo install --path .
-```
+You can find the documentation [here](https://docs.rs/lowcharts/latest/lowcharts/).
 
 ### Contributing
 
