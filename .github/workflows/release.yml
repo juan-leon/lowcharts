@@ -114,5 +114,6 @@ jobs:
       with:
         files: |
           ${{ steps.package.outputs.PKG_PATH }}
+          LICENSE
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
