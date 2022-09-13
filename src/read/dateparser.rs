@@ -42,7 +42,7 @@ impl LogDateParser {
         // of the "supported" formats (so that we do not lose precision digits
         // or TZ info).
         for (i, c) in log_line.chars().enumerate() {
-            if c.is_digit(10) {
+            if c.is_ascii_digit() {
                 for j in (i..(i + MAX_LEN).min(log_line.len() + 1)).rev() {
                     if let Some(parser) = Self::guess_parser(&log_line[i..j]) {
                         return Ok(LogDateParser {
