@@ -1,3 +1,8 @@
+0.5.3
+=====
+
+Add LICENSE file to distribution
+
 0.5.2
 =====
 
