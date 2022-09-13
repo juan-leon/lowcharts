@@ -164,6 +164,10 @@ $ cd lowcharts
 $ cargo install --path .
 ```
 
+#### Via AUR
+
+Arch-Linux users can install the [lowcharts](https://aur.archlinux.org/packages/lowcharts), [lowcharts-bin](https://aur.archlinux.org/packages/lowcharts-bin) or [lowcharts-git](https://aur.archlinux.org/packages/lowcharts-git) AUR package.
+
 ### Using it as a library
 
 `lowcharts` can be used as a library by any code that needs to display text
