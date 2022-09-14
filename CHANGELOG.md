@@ -1,7 +1,10 @@
-0.5.4
+0.5.5
 =====
 
-* Add LICENSE file to distribution
+* Add LICENSE file to distribution in binary package
+
+0.5.4
+=====
 
 * Add AUR installation info
 

@@ -91,12 +91,7 @@ jobs:
         PKG_STAGING="${{ env.CICD_INTERMEDIATES_DIR }}/package"
         ARCHIVE_DIR="${PKG_STAGING}/${PKG_BASENAME}/"
         mkdir -p "${ARCHIVE_DIR}"
-        cp "${{ steps.strip.outputs.BIN_PATH }}" "$ARCHIVE_DIR"
-
-        ls -l ${{ env.CICD_INTERMEDIATES_DIR }}
-        ls -lR ${{ env.CICD_INTERMEDIATES_DIR }}/package
-        echo "${PKG_STAGING}" end test
-
+        cp "${{ steps.strip.outputs.BIN_PATH }}" LICENSE "$ARCHIVE_DIR"
         tar -C "${PKG_STAGING}/${PKG_BASENAME}" -cvzf "${PKG_STAGING}/${PKG_NAME}" "${PROJECT_NAME}"
 
         # Let subsequent steps know where to find the compressed package
@@ -114,6 +109,5 @@ jobs:
       with:
         files: |
           ${{ steps.package.outputs.PKG_PATH }}
-          LICENSE
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
