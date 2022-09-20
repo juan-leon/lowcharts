@@ -1,3 +1,10 @@
+0.5.7
+=====
+
+* Add debian packages to releases
+
+* Add ARM build in releases
+
 0.5.6
 =====
 

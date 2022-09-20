@@ -166,7 +166,16 @@ $ cargo install --path .
 
 #### Via AUR
 
-Arch-Linux users can install the [lowcharts](https://aur.archlinux.org/packages/lowcharts), [lowcharts-bin](https://aur.archlinux.org/packages/lowcharts-bin) or [lowcharts-git](https://aur.archlinux.org/packages/lowcharts-git) AUR package.
+Arch-Linux users can install the
+[lowcharts](https://aur.archlinux.org/packages/lowcharts),
+[lowcharts-bin](https://aur.archlinux.org/packages/lowcharts-bin) or
+[lowcharts-git](https://aur.archlinux.org/packages/lowcharts-git) AUR package.
+
+#### Via debian package
+
+If you are using a debian based Linux distribution, you may download a debian
+file from https://github.com/juan-leon/lowcharts/releases/ for your
+architecture.  Then you can install it via `dpkg -i`.
 
 ### Using it as a library
 
