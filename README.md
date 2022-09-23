@@ -40,8 +40,9 @@ This chart is generated using `python3 -c 'import random; [print(random.normalva
 [![Sample histogram with lowcharts](resources/histogram-example.png)](resources/histogram-example.png)
 
 This was inspired by [data-hacks](https://github.com/bitly/data_hacks).
-However, for some big log files I found that project was slower of what I would
-like, and I found that a rust-compiled binary was better suited to my needs.
+However, for some big log files I found that project was a lot slower than what
+I would like, and I found that a rust-compiled binary was better suited to my
+needs: easy to copy around in a hurry (no deps) and very fast.
 
 
 Options for specifying ranges, chart sizes and input files are supported:
