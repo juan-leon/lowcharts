@@ -1,7 +1,9 @@
 use std::collections::HashMap;
 use std::fmt;
 
-use yansi::Color::{Blue, Green, Red};
+use yansi::Color::Blue;
+
+use crate::format::HorizontalScale;
 
 #[derive(Debug)]
 /// A struct holding data to plot a Histogram of the most frequent terms in an
@@ -42,21 +44,16 @@ impl fmt::Display for CommonTerms {
         counts.sort_by(|a, b| b.1.cmp(a.1));
         let values = &counts[..self.lines.min(counts.len())];
         let label_width = values.iter().fold(1, |acc, x| acc.max(x.0.len()));
-        let divisor = 1.max(counts[0].1 / width);
+        let horizontal_scale = HorizontalScale::new(counts[0].1 / width);
         let width_count = format!("{}", counts[0].1).len();
-        writeln!(
-            f,
-            "Each {} represents a count of {}",
-            Red.paint("∎"),
-            Blue.paint(divisor.to_string()),
-        )?;
+        writeln!(f, "{}", horizontal_scale)?;
         for (term, count) in values.iter() {
             writeln!(
                 f,
                 "[{label}] [{count}] {bar}",
                 label = Blue.paint(format!("{:>width$}", term, width = label_width)),
-                count = Green.paint(format!("{:width$}", count, width = width_count)),
-                bar = Red.paint(format!("{:∎<width$}", "", width = *count / divisor))
+                count = horizontal_scale.get_count(**count, width_count),
+                bar = horizontal_scale.get_bar(**count)
             )?;
         }
         Ok(())

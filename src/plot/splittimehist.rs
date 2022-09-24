@@ -3,6 +3,7 @@ use std::fmt;
 use chrono::{DateTime, Duration, FixedOffset};
 use yansi::Color::{Blue, Cyan, Green, Magenta, Red};
 
+use crate::format::{HorizontalScale, BAR_CHAR};
 use crate::plot::date_fmt_string;
 
 const COLORS: &[yansi::Color] = &[Red, Blue, Magenta, Green, Cyan];
@@ -134,7 +135,7 @@ impl SplitTimeHistogram {
             write!(
                 f,
                 "{}",
-                COLORS[i].paint("∎".repeat(row.count[i] / divisor).to_string())
+                COLORS[i].paint(BAR_CHAR.repeat(row.count[i] / divisor).to_string())
             )?;
         }
         writeln!(f)
@@ -146,7 +147,7 @@ impl fmt::Display for SplitTimeHistogram {
         let width = f.width().unwrap_or(100);
         let total = self.vec.iter().map(|r| r.total()).sum::<usize>();
         let top = self.vec.iter().map(|r| r.total()).max().unwrap_or(1);
-        let divisor = 1.max(top / width);
+        let horizontal_scale = HorizontalScale::new(top / width);
         // These are the widths of every count column
         let widths: Vec<usize> = (0..self.strings.len())
             .map(|i| {
@@ -163,15 +164,10 @@ impl fmt::Display for SplitTimeHistogram {
             let total = self.vec.iter().map(|r| r.count[i]).sum::<usize>();
             writeln!(f, "{}: {}.", COLORS[i].paint(s), total)?;
         }
-        writeln!(
-            f,
-            "Each {} represents a count of {}",
-            Red.paint("∎"),
-            divisor
-        )?;
+        writeln!(f, "{}", horizontal_scale)?;
         let ts_fmt = date_fmt_string(self.step.num_seconds());
         for row in self.vec.iter() {
-            self.fmt_row(f, row, divisor, &widths, ts_fmt)?;
+            self.fmt_row(f, row, horizontal_scale.get_scale(), &widths, ts_fmt)?;
         }
         Ok(())
     }

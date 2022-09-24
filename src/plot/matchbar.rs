@@ -1,6 +1,8 @@
 use std::fmt;
 
-use yansi::Color::{Blue, Green, Red};
+use yansi::Color::Blue;
+
+use crate::format::HorizontalScale;
 
 #[derive(Debug)]
 /// A struct that represents a single match bar of a match bar histogram (a
@@ -54,7 +56,7 @@ impl MatchBar {
 impl fmt::Display for MatchBar {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let width = f.width().unwrap_or(100);
-        let divisor = 1.max(self.top_values / width);
+        let horizontal_scale = HorizontalScale::new(self.top_values / width);
         let width_count = format!("{}", self.top_values).len();
         writeln!(
             f,
@@ -64,19 +66,14 @@ impl fmt::Display for MatchBar {
                 self.vec.iter().map(|r| r.count).sum::<usize>()
             )),
         )?;
-        writeln!(
-            f,
-            "Each {} represents a count of {}",
-            Red.paint("∎"),
-            Blue.paint(divisor.to_string()),
-        )?;
+        writeln!(f, "{}", horizontal_scale)?;
         for row in self.vec.iter() {
             writeln!(
                 f,
                 "[{label}] [{count}] {bar}",
                 label = Blue.paint(format!("{:width$}", row.label, width = self.top_lenght)),
-                count = Green.paint(format!("{:width$}", row.count, width = width_count)),
-                bar = Red.paint(format!("{:∎<width$}", "", width = row.count / divisor))
+                count = horizontal_scale.get_count(row.count, width_count),
+                bar = horizontal_scale.get_bar(row.count)
             )?;
         }
         Ok(())

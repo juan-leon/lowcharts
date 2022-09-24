@@ -1,8 +1,9 @@
 use std::fmt;
 
 use chrono::{DateTime, Duration, FixedOffset};
-use yansi::Color::{Blue, Green, Red};
+use yansi::Color::Blue;
 
+use crate::format::HorizontalScale;
 use crate::plot::date_fmt_string;
 
 #[derive(Debug)]
@@ -97,7 +98,7 @@ impl TimeHistogram {
 impl fmt::Display for TimeHistogram {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let width = f.width().unwrap_or(100);
-        let divisor = 1.max(self.top / width);
+        let horizontal_scale = HorizontalScale::new(self.top / width);
         let width_count = format!("{}", self.top).len();
         writeln!(
             f,
@@ -107,20 +108,15 @@ impl fmt::Display for TimeHistogram {
                 self.vec.iter().map(|r| r.count).sum::<usize>()
             )),
         )?;
-        writeln!(
-            f,
-            "Each {} represents a count of {}",
-            Red.paint("∎"),
-            Blue.paint(divisor.to_string()),
-        )?;
+        writeln!(f, "{}", horizontal_scale)?;
         let ts_fmt = date_fmt_string(self.step.num_seconds());
         for row in self.vec.iter() {
             writeln!(
                 f,
                 "[{label}] [{count}] {bar}",
                 label = Blue.paint(format!("{}", row.start.format(ts_fmt))),
-                count = Green.paint(format!("{:width$}", row.count, width = width_count)),
-                bar = Red.paint(format!("{:∎<width$}", "", width = row.count / divisor))
+                count = horizontal_scale.get_count(row.count, width_count),
+                bar = horizontal_scale.get_bar(row.count)
             )?;
         }
         Ok(())
