@@ -1,7 +1,12 @@
+use std::fmt;
 use std::ops::Range;
+
+use yansi::Color::{Blue, Green, Red};
+use yansi::Paint;
 
 // Units-based suffixes for human formatting.
 const UNITS: &[&str] = &["", " K", " M", " G", " T", " P", " E", " Z", " Y"];
+pub static BAR_CHAR: &str = "∎";
 
 #[derive(Debug)]
 pub struct F64Formatter {
@@ -63,9 +68,46 @@ impl F64Formatter {
     }
 }
 
+pub struct HorizontalScale {
+    /// How many units are represented by a char
+    scale: usize,
+}
+
+impl HorizontalScale {
+    pub fn new(scale: usize) -> HorizontalScale {
+        HorizontalScale {
+            scale: 1.max(scale),
+        }
+    }
+
+    pub fn get_bar(&self, units: usize) -> Paint<String> {
+        Red.paint(format!("{:∎<width$}", "", width = units / self.scale))
+    }
+
+    pub fn get_count(&self, units: usize, width: usize) -> Paint<String> {
+        Green.paint(format!("{:width$}", units, width = width))
+    }
+
+    pub fn get_scale(&self) -> usize {
+        self.scale
+    }
+}
+
+impl fmt::Display for HorizontalScale {
+    fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+        writeln!(
+            formatter,
+            "Each {} represents a count of {}",
+            Red.paint(BAR_CHAR),
+            Blue.paint(self.scale.to_string()),
+        )
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+    use yansi::Paint;
 
     #[test]
     fn test_basic_format() {
@@ -154,5 +196,40 @@ mod tests {
             F64Formatter::new_with_range(-10000000.0..10.0).format(-3.12),
             "-0.0 M"
         );
+    }
+
+    #[test]
+    fn test_horizontal_scale() {
+        Paint::disable();
+        assert_eq!(
+            format!("{}", HorizontalScale::new(123)),
+            format!("Each {BAR_CHAR} represents a count of 123\n")
+        );
+    }
+
+    #[test]
+    fn test_horizontal_scale_with_zero_scale() {
+        Paint::disable();
+        let scale = HorizontalScale::new(0);
+        assert_eq!(scale.get_scale(), 1);
+        assert_eq!(
+            format!("{}", scale),
+            format!("Each {BAR_CHAR} represents a count of 1\n")
+        );
+    }
+
+    #[test]
+    fn test_horizontal_scale_bar() {
+        let scale = HorizontalScale::new(10);
+        assert_eq!(
+            scale.get_bar(80),
+            Red.paint(format!("{:∎<width$}", "", width = 8))
+        );
+    }
+
+    #[test]
+    fn test_horizontal_scale_count() {
+        let scale = HorizontalScale::new(10);
+        assert_eq!(scale.get_count(80, 5), Green.paint(format!("   80")));
     }
 }
