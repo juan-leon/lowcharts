@@ -109,15 +109,14 @@ fn histogram(matches: &ArgMatches) -> i32 {
     if !assert_data(&vec, 1) {
         return 1;
     }
+    let mut options = plot::HistogramOptions::default();
     let precision_arg: i32 = matches.value_of_t("precision").unwrap();
-    let precision = if precision_arg < 0 {
-        None
-    } else {
-        Some(precision_arg as usize)
+    if precision_arg > 0 {
+        options.precision = Some(precision_arg as usize)
     };
+    options.intervals = matches.value_of_t("intervals").unwrap();
     let width = matches.value_of_t("width").unwrap();
-    let intervals: usize = matches.value_of_t("intervals").unwrap();
-    let histogram = plot::Histogram::new(&vec, intervals, precision);
+    let histogram = plot::Histogram::new(&vec, options);
     print!("{:width$}", histogram, width = width);
     0
 }
