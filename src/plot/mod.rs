@@ -1,4 +1,4 @@
-pub use self::histogram::Histogram;
+pub use self::histogram::{Histogram, HistogramOptions};
 pub use self::matchbar::{MatchBar, MatchBarRow};
 pub use self::splittimehist::SplitTimeHistogram;
 pub use self::terms::CommonTerms;

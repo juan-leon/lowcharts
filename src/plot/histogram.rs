@@ -23,8 +23,7 @@ impl Bucket {
     }
 }
 
-#[derive(Debug)]
-/// A struct holding data to plot a Histogram of numerical data.
+/// A struct representing the options to build an histogram.
 pub struct Histogram {
     vec: Vec<Bucket>,
     max: f64,
@@ -33,6 +32,26 @@ pub struct Histogram {
     last: usize,
     stats: Stats,
     precision: Option<usize>, // If None, then human friendly display will be used
+}
+
+/// A struct holding data to plot a Histogram of numerical data.
+pub struct HistogramOptions {
+    /// Maximum number of buckets to use
+    pub intervals: usize,
+    /// If true, logarithmic scale will be used for buckets
+    pub log_scale: bool,
+    /// If None, then human friendly display will be used
+    pub precision: Option<usize>,
+}
+
+impl Default for HistogramOptions {
+    fn default() -> Self {
+        Self {
+            intervals: 10,
+            log_scale: false,
+            precision: None,
+        }
+    }
 }
 
 impl Histogram {
@@ -44,11 +63,12 @@ impl Histogram {
     /// `precision` is an Option with the number of decimals to display.  If
     /// "None" is used, human units will be used, with an heuristic based on the
     /// input data for deciding the units and the decimal places.
-    pub fn new(vec: &[f64], intervals: usize, precision: Option<usize>) -> Histogram {
-        let stats = Stats::new(vec, precision);
-        let size = intervals.min(vec.len());
+    pub fn new(vec: &[f64], mut options: HistogramOptions) -> Histogram {
+        options.intervals = options.intervals.min(vec.len());
+        let stats = Stats::new(vec, options.precision);
+        let size = options.intervals.min(vec.len());
         let step = (stats.max - stats.min) / size as f64;
-        let mut histogram = Histogram::new_with_stats(size, step, stats, precision);
+        let mut histogram = Histogram::new_with_stats(step, stats, options);
         histogram.load(vec);
         histogram
     }
@@ -59,26 +79,21 @@ impl Histogram {
     /// Parameters are similar to those on the `new` method, but a parameter
     /// named `stats` is needed to decide how future data (to be injected with
     /// the load method) will be accommodated.
-    pub fn new_with_stats(
-        size: usize,
-        step: f64,
-        stats: Stats,
-        precision: Option<usize>,
-    ) -> Histogram {
-        let mut vec = Vec::<Bucket>::with_capacity(size);
+    pub fn new_with_stats(step: f64, stats: Stats, options: HistogramOptions) -> Histogram {
+        let mut vec = Vec::<Bucket>::with_capacity(options.intervals);
         let mut lower = stats.min;
-        for _ in 0..size {
+        for _ in 0..options.intervals {
             vec.push(Bucket::new(lower..lower + step));
             lower += step;
         }
         Histogram {
             vec,
-            max: stats.min + (step * size as f64),
+            max: stats.min + (step * options.intervals as f64),
             step,
             top: 0,
-            last: size - 1,
+            last: options.intervals - 1,
             stats,
-            precision,
+            precision: options.precision,
         }
     }
 
@@ -186,7 +201,11 @@ mod tests {
     #[test]
     fn test_buckets() {
         let stats = Stats::new(&[-2.0, 14.0], None);
-        let mut hist = Histogram::new_with_stats(8, 2.5, stats, None);
+        let options = HistogramOptions {
+            intervals: 8,
+            ..Default::default()
+        };
+        let mut hist = Histogram::new_with_stats(2.5, stats, options);
         hist.load(&[
             -1.0, -1.1, 2.0, 2.0, 2.1, -0.9, 11.0, 11.2, 1.9, 1.99, 1.98, 1.97, 1.96,
         ]);
@@ -202,7 +221,11 @@ mod tests {
 
     #[test]
     fn test_buckets_bad_stats() {
-        let mut hist = Histogram::new_with_stats(6, 1.0, Stats::new(&[-2.0, 4.0], None), None);
+        let options = HistogramOptions {
+            intervals: 6,
+            ..Default::default()
+        };
+        let mut hist = Histogram::new_with_stats(1.0, Stats::new(&[-2.0, 4.0], None), options);
         hist.load(&[-1.0, 2.0, -1.0, 2.0, 10.0, 10.0, 10.0, -10.0]);
         assert_eq!(hist.top, 2);
     }
@@ -210,7 +233,12 @@ mod tests {
     #[test]
     fn display_test() {
         let stats = Stats::new(&[-2.0, 14.0], None);
-        let mut hist = Histogram::new_with_stats(8, 2.5, stats, Some(3));
+        let options = HistogramOptions {
+            intervals: 8,
+            precision: Some(3),
+            log_scale: false,
+        };
+        let mut hist = Histogram::new_with_stats(2.5, stats, options);
         hist.load(&[
             -1.0, -1.1, 2.0, 2.0, 2.1, -0.9, 11.0, 11.2, 1.9, 1.99, 1.98, 1.97, 1.96,
         ]);
@@ -223,7 +251,12 @@ mod tests {
 
     #[test]
     fn display_test_bad_width() {
-        let mut hist = Histogram::new_with_stats(8, 2.5, Stats::new(&[-2.0, 14.0], None), Some(3));
+        let options = HistogramOptions {
+            intervals: 8,
+            precision: Some(3),
+            log_scale: false,
+        };
+        let mut hist = Histogram::new_with_stats(2.5, Stats::new(&[-2.0, 14.0], None), options);
         hist.load(&[
             -1.0, -1.1, 2.0, 2.0, 2.1, -0.9, 11.0, 11.2, 1.9, 1.99, 1.98, 1.97, 1.96,
         ]);
@@ -244,7 +277,7 @@ mod tests {
             500000.0,
             500000.0,
         ];
-        let hist = Histogram::new(vector, vector.len(), None);
+        let hist = Histogram::new(vector, HistogramOptions::default());
         Paint::disable();
         let display = format!("{}", hist);
         assert!(display.contains("[-12.0 M .. -10.4 M] [4] ∎∎∎∎\n"));
