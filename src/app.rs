@@ -1,4 +1,6 @@
-use clap::{self, Arg, Command};
+use clap::{self, value_parser, Arg, ArgAction, Command};
+
+// FIXME: use .value_name
 
 fn add_input(cmd: Command) -> Command {
     cmd.arg(
@@ -15,7 +17,7 @@ fn add_input_as_option(cmd: Command) -> Command {
             .long("input")
             .default_value("-")
             .long_help("If not present or a single dash, standard input will be used")
-            .takes_value(true),
+            .value_parser(value_parser!(usize)),
     )
 }
 
@@ -26,7 +28,7 @@ fn add_min_max(cmd: Command) -> Command {
             .short('M')
             .allow_hyphen_values(true)
             .help("Filter out values bigger than this")
-            .takes_value(true),
+            .value_parser(value_parser!(usize)),
     )
     .arg(
         Arg::new("min")
@@ -34,7 +36,7 @@ fn add_min_max(cmd: Command) -> Command {
             .short('m')
             .allow_hyphen_values(true)
             .help("Filter out values smaller than this")
-            .takes_value(true),
+            .value_parser(value_parser!(usize)),
     )
 }
 
@@ -56,9 +58,9 @@ the named one will be used).
         Arg::new("regex")
             .long("regex")
             .short('R')
+            .action(ArgAction::Set)
             .help("Use a regex to capture input values")
-            .long_help(LONG_RE_ABOUT)
-            .takes_value(true),
+            .long_help(LONG_RE_ABOUT),
     )
 }
 
@@ -67,8 +69,8 @@ fn add_non_capturing_regex(cmd: Command) -> Command {
         Arg::new("regex")
             .long("regex")
             .short('R')
-            .help("Filter out lines where regex is not present")
-            .takes_value(true),
+            .action(ArgAction::Set)
+            .help("Filter out lines where regex is not present"),
     )
 }
 
@@ -79,7 +81,7 @@ fn add_width(cmd: Command) -> Command {
             .short('w')
             .help("Use this many characters as terminal width")
             .default_value("110")
-            .takes_value(true),
+            .value_parser(value_parser!(usize)),
     )
 }
 
@@ -90,22 +92,21 @@ fn add_intervals(cmd: Command) -> Command {
             .short('i')
             .help("Use no more than this amount of buckets to classify data")
             .default_value("20")
-            .takes_value(true),
+            .value_parser(value_parser!(usize)),
     )
 }
 
 fn add_precision(cmd: Command) -> Command {
     cmd.arg(
         Arg::new("precision")
-            .long("precision")
+            .long("precision") // FIXME test precision
             .short('p')
             .help("Show that number of decimals (if omitted, 'human' units will be used)")
-            .default_value("-1")
-            .takes_value(true),
+            .value_parser(value_parser!(usize)),
     )
 }
 
-pub fn get_app() -> Command<'static> {
+pub fn get_app() -> Command {
     let mut hist = Command::new("hist")
         .version(clap::crate_version!())
         .about("Plot an histogram from input values");
@@ -120,9 +121,10 @@ pub fn get_app() -> Command<'static> {
             Arg::new("height")
                 .long("height")
                 .short('H')
+                .action(ArgAction::Set)
                 .help("Use that many `rows` for the plot")
                 .default_value("40")
-                .takes_value(true),
+                .value_parser(value_parser!(usize)),
         );
     plot = add_input(add_regex(add_width(add_min_max(add_precision(plot)))));
 
@@ -134,8 +136,7 @@ pub fn get_app() -> Command<'static> {
         Arg::new("match")
             .help("Count maches for those strings")
             .required(true)
-            .takes_value(true)
-            .multiple_occurrences(true),
+            .action(ArgAction::Append),
     );
 
     let mut timehist =
@@ -146,14 +147,14 @@ pub fn get_app() -> Command<'static> {
                 Arg::new("format")
                     .long("format")
                     .short('f')
-                    .help("Use this string formatting")
-                    .takes_value(true),
+                    .action(ArgAction::Set)
+                    .help("Use this string formatting"),
             )
             .arg(
                 Arg::new("duration")
                     .long("duration")
-                    .help("Cap the time interval at that duration (example: '3h 5min')")
-                    .takes_value(true),
+                    .action(ArgAction::Set)
+                    .help("Cap the time interval at that duration (example: '3h 5min')"),
             )
             .arg(Arg::new("early-stop").long("early-stop").help(
                 "If duration flag is used, assume monotonic times and stop as soon as possible",
@@ -167,15 +168,14 @@ pub fn get_app() -> Command<'static> {
             Arg::new("format")
                 .long("format")
                 .short('f')
-                .help("Use this string formatting")
-                .takes_value(true),
+                .action(ArgAction::Set)
+                .help("Use this string formatting"),
         );
     splittimehist = add_input_as_option(add_width(add_intervals(splittimehist))).arg(
         Arg::new("match")
             .help("Count maches for those strings")
             .required(true)
-            .takes_value(true)
-            .multiple_occurrences(true),
+            .action(ArgAction::Append),
     );
 
     let mut common_terms = Command::new("common-terms")
@@ -187,7 +187,8 @@ pub fn get_app() -> Command<'static> {
             .short('l')
             .help("Display that many lines, sorting by most frequent")
             .default_value("10")
-            .takes_value(true),
+            .action(ArgAction::Set)
+            .value_parser(value_parser!(usize)),
     );
 
     Command::new("lowcharts")
@@ -201,16 +202,15 @@ pub fn get_app() -> Command<'static> {
                 .short('c')
                 .long("color")
                 .help("Use colors in the output")
-                .possible_values(&["auto", "no", "yes"])
-                .default_value("auto")
-                .takes_value(true),
+                .value_parser(["auto", "no", "yes"])
+                .default_value("auto"),
         )
         .arg(
             Arg::new("verbose")
                 .short('v')
                 .long("verbose")
-                .help("Be more verbose")
-                .takes_value(false),
+                .action(ArgAction::Set)
+                .help("Be more verbose"),
         )
         .subcommand(hist)
         .subcommand(plot)

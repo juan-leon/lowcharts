@@ -22,7 +22,7 @@ license = "MIT"
 
 
 [dependencies]
-clap = { version = "^3", features = ["cargo"] }
+clap = { version = "^4", features = ["cargo"] }
 yansi = "^0"
 atty = "^0"
 derive_builder = "^0"

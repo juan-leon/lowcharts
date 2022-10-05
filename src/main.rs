@@ -76,16 +76,16 @@ fn parse_duration(duration: &str) -> Result<Duration, humantime::DurationError> 
 /// from an input source.
 fn get_float_reader(matches: &ArgMatches) -> Result<read::DataReader, ()> {
     let mut builder = read::DataReaderBuilder::default();
-    if matches.is_present("min") || matches.is_present("max") {
-        let min = matches.value_of_t("min").unwrap_or(f64::NEG_INFINITY);
-        let max = matches.value_of_t("max").unwrap_or(f64::INFINITY);
+    if matches.contains_id("min") || matches.contains_id("max") {
+        let min = *matches.get_one("min").unwrap_or(&f64::NEG_INFINITY);
+        let max = *matches.get_one("max").unwrap_or(&f64::INFINITY);
         if min > max {
             error!("Minimum should be smaller than maximum");
             return Err(());
         }
         builder.range(min..max);
     }
-    if let Some(string) = matches.value_of("regex") {
+    if let Some(&string) = matches.get_one("regex") {
         match Regex::new(string) {
             Ok(re) => {
                 builder.regex(re);
@@ -105,17 +105,16 @@ fn histogram(matches: &ArgMatches) -> i32 {
         Ok(r) => r,
         _ => return 2,
     };
-    let vec = reader.read(matches.value_of("input").unwrap());
+    let vec = reader.read(*matches.get_one("input").unwrap());
     if !assert_data(&vec, 1) {
         return 1;
     }
     let mut options = plot::HistogramOptions::default();
-    let precision_arg: i32 = matches.value_of_t("precision").unwrap();
-    if precision_arg > 0 {
-        options.precision = Some(precision_arg as usize)
+    if matches.contains_id("precision") {
+        options.precision = Some(*matches.get_one("precision").unwrap())
     };
-    options.intervals = matches.value_of_t("intervals").unwrap();
-    let width = matches.value_of_t("width").unwrap();
+    options.intervals = *matches.get_one("intervals").unwrap();
+    let width = *matches.get_one("width").unwrap();
     let histogram = plot::Histogram::new(&vec, options);
     print!("{:width$}", histogram, width = width);
     0
@@ -127,11 +126,11 @@ fn plot(matches: &ArgMatches) -> i32 {
         Ok(r) => r,
         _ => return 2,
     };
-    let vec = reader.read(matches.value_of("input").unwrap());
+    let vec = reader.read(*matches.get_one("input").unwrap());
     if !assert_data(&vec, 1) {
         return 1;
     }
-    let precision_arg: i32 = matches.value_of_t("precision").unwrap();
+    let precision_arg: i32 = *matches.get_one("precision").unwrap();
     let precision = if precision_arg < 0 {
         None
     } else {
@@ -139,8 +138,8 @@ fn plot(matches: &ArgMatches) -> i32 {
     };
     let plot = plot::XyPlot::new(
         &vec,
-        matches.value_of_t("width").unwrap(),
-        matches.value_of_t("height").unwrap(),
+        *matches.get_one("width").unwrap(),
+        *matches.get_one("height").unwrap(),
         precision,
     );
     print!("{}", plot);
@@ -155,7 +154,7 @@ fn matchbar(matches: &ArgMatches) -> i32 {
         "{:width$}",
         reader.read_matches(
             matches.value_of("input").unwrap(),
-            matches.values_of("match").unwrap().collect()
+            matches.get_many("match").unwrap().collect()
         ),
         width = width
     );
@@ -266,7 +265,7 @@ fn main() {
     let matches = app::get_app().get_matches();
     configure_output(
         matches.value_of("color").unwrap(),
-        matches.is_present("verbose"),
+        matches.get_flag("verbose"),
     );
     std::process::exit(match matches.subcommand() {
         Some(("hist", subcommand_matches)) => histogram(subcommand_matches),
