@@ -72,7 +72,7 @@ impl LogDateParser {
                                     let date_time: DateTime<Utc> =
                                         Utc.from_local_datetime(&naive).unwrap();
                                     Ok(date_time.with_timezone(&TimeZone::from_offset(
-                                        &FixedOffset::west(0),
+                                        &FixedOffset::west_opt(0).unwrap(),
                                     )))
                                 }
                                 Err(err) => Err(err),
@@ -93,6 +93,9 @@ impl LogDateParser {
         (self.parser)(&s[range])
     }
 
+    // today method is deprecated, and there is no easy way to convert "today"
+    // as a DateTime<FixedOffset>
+    #[allow(deprecated)]
     fn guess_parser(s: &str) -> Option<Box<DateParsingFun>> {
         if DateTime::parse_from_rfc3339(s).is_ok() {
             return Some(Box::new(DateTime::parse_from_rfc3339));
@@ -115,9 +118,11 @@ impl LogDateParser {
                 };
                 match string[..dot].parse::<i64>() {
                     Ok(secs) => {
-                        let naive = NaiveDateTime::from_timestamp(secs, nanosecs);
+                        let naive = NaiveDateTime::from_timestamp_opt(secs, nanosecs).unwrap();
                         let date_time: DateTime<Utc> = Utc.from_local_datetime(&naive).unwrap();
-                        Ok(date_time.with_timezone(&TimeZone::from_offset(&FixedOffset::west(0))))
+                        Ok(date_time.with_timezone(&TimeZone::from_offset(
+                            &FixedOffset::west_opt(0).unwrap(),
+                        )))
                     }
                     Err(_) => DateTime::parse_from_rfc3339(""),
                 }
@@ -129,8 +134,9 @@ impl LogDateParser {
                     move |string: &str| match NaiveDateTime::parse_from_str(string, format) {
                         Ok(naive) => {
                             let date_time: DateTime<Utc> = Utc.from_local_datetime(&naive).unwrap();
-                            Ok(date_time
-                                .with_timezone(&TimeZone::from_offset(&FixedOffset::west(0))))
+                            Ok(date_time.with_timezone(&TimeZone::from_offset(
+                                &FixedOffset::west_opt(0).unwrap(),
+                            )))
                         }
                         Err(err) => Err(err),
                     },
@@ -141,10 +147,11 @@ impl LogDateParser {
             if NaiveTime::parse_from_str(s, format).is_ok() {
                 return Some(Box::new(
                     move |string: &str| match NaiveTime::parse_from_str(string, format) {
-                        Ok(naive_time) => Ok(Utc::today()
-                            .and_time(naive_time)
-                            .unwrap()
-                            .with_timezone(&TimeZone::from_offset(&FixedOffset::west(0)))),
+                        Ok(naive_time) => {
+                            Ok(Utc::today().and_time(naive_time).unwrap().with_timezone(
+                                &TimeZone::from_offset(&FixedOffset::west_opt(0).unwrap()),
+                            ))
+                        }
                         Err(err) => Err(err),
                     },
                 ));
@@ -269,7 +276,7 @@ mod tests {
             DateTime::parse_from_rfc3339("2019-12-19T05:01:02+00:00")
         );
         let r = LogDateParser::new_with_guess("11:29:13.120535").unwrap();
-        let now_as_date = format!("{}", Utc::today());
+        let now_as_date = format!("{}", Utc::now().date_naive());
         assert_eq!(
             r.parse("11:29:13.120535"),
             DateTime::parse_from_rfc3339(&format!(
