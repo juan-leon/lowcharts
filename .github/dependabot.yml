@@ -1,0 +1,16 @@
+version: 2
+updates:
+- package-ecosystem: cargo
+  directory: "/"
+  schedule:
+    interval: weekly
+    time: "09:00"
+  ignore:
+  - dependency-name: clap
+    # I am staying in clap v3 until clap v4 supports colored help
+    update-types: ["version-update:semver-major"]
+- package-ecosystem: "github-actions"
+  directory: "/"
+  schedule:
+    interval: weekly
+    time: "09:00"
