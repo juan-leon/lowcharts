@@ -28,7 +28,7 @@ jobs:
           - { os: macos-11, target: x86_64-apple-darwin }
     steps:
     - name: Checkout source code
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
 
     - name: Install prerequisites
       shell: bash
@@ -198,14 +198,14 @@ jobs:
         fakeroot dpkg-deb --build "${DPKG_DIR}" "${DPKG_PATH}"
 
     - name: "Artifact upload: tarball"
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v3
       with:
         name: ${{ steps.package.outputs.PKG_NAME }}
         path: ${{ steps.package.outputs.PKG_PATH }}
         if-no-files-found: error
 
     - name: "Artifact upload: Debian package"
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v3
       if: steps.debian-package.outputs.DPKG_NAME
       with:
         name: ${{ steps.debian-package.outputs.DPKG_NAME }}
