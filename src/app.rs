@@ -201,7 +201,7 @@ pub fn get_app() -> Command<'static> {
                 .short('c')
                 .long("color")
                 .help("Use colors in the output")
-                .possible_values(&["auto", "no", "yes"])
+                .possible_values(["auto", "no", "yes"])
                 .default_value("auto")
                 .takes_value(true),
         )
