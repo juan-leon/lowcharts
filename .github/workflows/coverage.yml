@@ -13,10 +13,26 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
-      - name: Run cargo-tarpaulin
-        uses: actions-rs/tarpaulin@v0.1
+
+      - name: Set up cargo cache
+        uses: actions/cache@v3
+        continue-on-error: false
         with:
-          args: '-- --test-threads 1'
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: ${{ runner.os }}-cargo-
+
+      - name: Install cargo-tarpaulin
+        run: cargo install cargo-tarpaulin
+
+      - name: Run cargo-tarpaulin
+        run: cargo tarpaulin --out xml --ignore-tests -- --test-threads 1
+
       - name: Upload to codecov.io
         uses: codecov/codecov-action@v3
         with:

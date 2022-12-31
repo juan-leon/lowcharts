@@ -10,18 +10,37 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v3
-    - name: Build
-      run: cargo build --verbose
-    - name: Run tests
-      # We need to avoid concurrency running tests (that are very fast,
-      # anyways), in order to to avoid false positives when testing if writing
-      # colored output in the terminal is enabled or disabled (a test could
-      # enable it while other is running and checking if is disabled).
-      run: cargo test -- --test-threads=1
-    - name: Check format
-      run: cargo fmt -- --check
-    - name: Get clippy version
-      run: cargo clippy -V
-    - name: Run clippy
-      run: cargo clippy -- -D clippy::all
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up cargo cache
+        uses: actions/cache@v3
+        continue-on-error: false
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: ${{ runner.os }}-cargo-
+
+      - name: Build
+        run: cargo build --verbose
+
+      - name: Run tests
+        # We need to avoid concurrency running tests (that are very fast,
+        # anyways), in order to to avoid false positives when testing if writing
+        # colored output in the terminal is enabled or disabled (a test could
+        # enable it while other is running and checking if is disabled).
+        run: cargo test -- --test-threads=1
+
+      - name: Check format
+        run: cargo fmt -- --check
+
+      - name: Get clippy version
+        run: cargo clippy -V
+
+      - name: Run clippy
+        run: cargo clippy -- -D clippy::all
