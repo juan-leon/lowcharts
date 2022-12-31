@@ -12,7 +12,7 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: Run cargo-tarpaulin
         uses: actions-rs/tarpaulin@v0.1.0
         with:
