@@ -12,6 +12,9 @@ keywords = ["grep", "troubleshooting", "graph", "text", "console"]
 categories = ["command-line-utilities", "text-processing"]
 license = "MIT"
 
+[package.metadata.deb]
+depends = ""
+
 [lib]
   name = "lowcharts"
   path = "src/lib.rs"

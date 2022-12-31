@@ -55,8 +55,6 @@ jobs:
       run: |
         echo "PROJECT_NAME=$(sed -n 's/^name = "\(.*\)"/\1/p' Cargo.toml)" >> $GITHUB_ENV
         echo "PROJECT_VERSION=$(sed -n 's/^version = "\(.*\)"/\1/p' Cargo.toml | head -n1)" >> $GITHUB_ENV
-        echo "PROJECT_MAINTAINER=$(sed -n 's/^authors = \["\(.*\)"\]/\1/p' Cargo.toml)" >> $GITHUB_ENV
-        echo "PROJECT_HOMEPAGE=$(sed -n 's/^homepage = "\(.*\)"/\1/p' Cargo.toml)" >> $GITHUB_ENV
 
     - name: Install Rust toolchain
       uses: actions-rs/toolchain@v1
@@ -97,8 +95,8 @@ jobs:
         BIN_NAME="${{ env.PROJECT_NAME }}"
         BIN_PATH="${BIN_DIR}/${BIN_NAME}"
         # Copy the release build binary to the result location
+        "${STRIP}" "target/${{ matrix.job.target }}/release/${BIN_NAME}"
         cp "target/${{ matrix.job.target }}/release/${BIN_NAME}" "${BIN_DIR}"
-        "${STRIP}" "${BIN_PATH}"
         # Let subsequent steps know where to find the (stripped) bin
         echo ::set-output name=BIN_PATH::${BIN_PATH}
         echo ::set-output name=BIN_NAME::${BIN_NAME}
@@ -136,79 +134,21 @@ jobs:
         # Let subsequent steps know where to find the compressed package
         echo ::set-output name=PKG_PATH::"${PKG_STAGING}/${PKG_NAME}"
 
-    - name: Create Debian package
+    - name: Install cargo-deb
+      if: contains(matrix.job.target, 'musl')
+      run: cargo install cargo-deb
+
+    - name: Create deb package
+      if: contains(matrix.job.target, 'musl')
       id: debian-package
       shell: bash
-      if: contains(matrix.job.target, 'musl')
       run: |
-        DPKG_STAGING="${{ env.CICD_INTERMEDIATES_DIR }}/debian-package"
-        DPKG_DIR="${DPKG_STAGING}/dpkg"
-        mkdir -p "${DPKG_DIR}"
-        DPKG_BASENAME=${PROJECT_NAME}
-        DPKG_VERSION=${PROJECT_VERSION}
-        unset DPKG_ARCH
-        case ${{ matrix.job.target }} in
-          arm-*-linux-*hf) DPKG_ARCH=armhf ;;
-          i686-*-linux-*) DPKG_ARCH=i686 ;;
-          x86_64-*-linux-*) DPKG_ARCH=amd64 ;;
-          *) DPKG_ARCH=notset ;;
-        esac;
-        DPKG_NAME="${DPKG_BASENAME}_${DPKG_VERSION}_${DPKG_ARCH}.deb"
-        echo ::set-output name=DPKG_NAME::${DPKG_NAME}
-        # Binary
-        install -Dm755 "${{ steps.strip.outputs.BIN_PATH }}" "${DPKG_DIR}/usr/bin/${{ steps.strip.outputs.BIN_NAME }}"
-        # LICENSE
-        install -Dm644 LICENSE "${DPKG_DIR}/usr/share/doc/${DPKG_BASENAME}/LICENSE"
-        install -Dm644 CHANGELOG.md "${DPKG_DIR}/usr/share/doc/${DPKG_BASENAME}/changelog"
-        gzip -n --best "${DPKG_DIR}/usr/share/doc/${DPKG_BASENAME}/changelog"
-        cat > "${DPKG_DIR}/usr/share/doc/${DPKG_BASENAME}/copyright" <<EOF
-        Format: http://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
-        Upstream-Name: ${{ env.PROJECT_NAME }}
-        Source: ${{ env.PROJECT_HOMEPAGE }}
-        Files: *
-        Copyright: ${{ env.PROJECT_MAINTAINER }}
-        License: MIT
-          Permission is hereby granted, free of charge, to any
-          person obtaining a copy of this software and associated
-          documentation files (the "Software"), to deal in the
-          Software without restriction, including without
-          limitation the rights to use, copy, modify, merge,
-          publish, distribute, sublicense, and/or sell copies of
-          the Software, and to permit persons to whom the Software
-          is furnished to do so, subject to the following
-          conditions:
-          .
-          The above copyright notice and this permission notice
-          shall be included in all copies or substantial portions
-          of the Software.
-          .
-          THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF
-          ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED
-          TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
-          PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT
-          SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
-          CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
-          OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR
-          IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
-          DEALINGS IN THE SOFTWARE.
-        EOF
-          chmod 644 "${DPKG_DIR}/usr/share/doc/${DPKG_BASENAME}/copyright"
-          # control file
-          mkdir -p "${DPKG_DIR}/DEBIAN"
-          cat > "${DPKG_DIR}/DEBIAN/control" <<EOF
-        Package: ${DPKG_BASENAME}
-        Version: ${DPKG_VERSION}
-        Section: utils
-        Priority: optional
-        Maintainer: ${{ env.PROJECT_MAINTAINER }}
-        Homepage: ${{ env.PROJECT_HOMEPAGE }}
-        Architecture: ${DPKG_ARCH}
-        Provides: ${{ env.PROJECT_NAME }}
-        Description: Tool to draw low-resolution graphs in terminal.
-        EOF
-        DPKG_PATH="${DPKG_STAGING}/${DPKG_NAME}"
-        echo ::set-output name=DPKG_PATH::${DPKG_PATH}
-        fakeroot dpkg-deb --build "${DPKG_DIR}" "${DPKG_PATH}"
+        cargo deb --target ${{ matrix.job.target }} --no-build --no-strip
+        DEB_PATH=target/${{ matrix.job.target }}/debian/*.deb
+        DEB_NAME=$(basename ${DEB_PATH})
+        echo Names are ${DEB_NAME} and ${DEB_PATH}
+        echo ::set-output name=DEB_NAME::${DEB_NAME}
+        echo ::set-output name=DEB_PATH::${DEB_PATH}
 
     - name: "Artifact upload: tarball"
       uses: actions/upload-artifact@v3
@@ -219,16 +159,17 @@ jobs:
 
     - name: "Artifact upload: Debian package"
       uses: actions/upload-artifact@v3
-      if: steps.debian-package.outputs.DPKG_NAME
+      if: steps.debian-package.outputs.DEB_NAME
       with:
-        name: ${{ steps.debian-package.outputs.DPKG_NAME }}
-        path: ${{ steps.debian-package.outputs.DPKG_PATH }}
+        name: ${{ steps.debian-package.outputs.DEB_NAME }}
+        path: ${{ steps.debian-package.outputs.DEB_PATH }}
+        if-no-files-found: error
 
     - name: Publish archives and packages
       uses: softprops/action-gh-release@v1
       with:
         files: |
           ${{ steps.package.outputs.PKG_PATH }}
-          ${{ steps.debian-package.outputs.DPKG_PATH }}
+          ${{ steps.debian-package.outputs.DEB_PATH }}
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
