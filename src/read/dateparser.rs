@@ -67,7 +67,7 @@ impl LogDateParser {
                     return Ok(LogDateParser {
                         range: i..j,
                         parser: Box::new(move |string: &str| {
-                            match NaiveDateTime::parse_from_str(string, &*fmt) {
+                            match NaiveDateTime::parse_from_str(string, &fmt) {
                                 Ok(naive) => {
                                     let date_time: DateTime<Utc> =
                                         Utc.from_local_datetime(&naive).unwrap();
