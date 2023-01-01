@@ -76,11 +76,7 @@ jobs:
         rustc -V
 
     - name: Build
-      uses: actions-rs/cargo@v1
-      with:
-        use-cross: ${{ matrix.job.use-cross }}
-        command: build
-        args: --release --target=${{ matrix.job.target }}
+      run: cargo build --release --target=${{ matrix.job.target }}
 
     - name: Strip debug information from executable
       id: strip
@@ -111,11 +107,7 @@ jobs:
         echo "CARGO_TEST_OPTIONS=${CARGO_TEST_OPTIONS}" >> $GITHUB_OUTPUT
 
     - name: Run tests
-      uses: actions-rs/cargo@v1
-      with:
-        use-cross: ${{ matrix.job.use-cross }}
-        command: test
-        args: --target=${{ matrix.job.target }} ${{ steps.test-options.outputs.CARGO_TEST_OPTIONS}} -- --test-threads 1
+      run: cargo test --target=${{ matrix.job.target }} ${{ steps.test-options.outputs.CARGO_TEST_OPTIONS}} -- --test-threads 1
 
     - name: Create tarball
       id: package
