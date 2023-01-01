@@ -1,11 +1,12 @@
 # This is a simplification of the workflow for sharkdp/bat.
 
 name: Release
-on:
-  push:
-    # The idea here is to trigger a release upon receiving a release-like tag
-    tags:
-      - 'v[0-9]+.[0-9]+.[0-9]+'
+on: [push]
+#on:
+#  push:
+#    # The idea here is to trigger a release upon receiving a release-like tag
+#    tags:
+#      - 'v[0-9]+.[0-9]+.[0-9]+'
 
 env:
   CICD_INTERMEDIATES_DIR: "_cicd-intermediates"
@@ -164,11 +165,12 @@ jobs:
         path: ${{ steps.debian-package.outputs.DEB_PATH }}
         if-no-files-found: error
 
-    - name: Publish archives and packages
-      uses: softprops/action-gh-release@v1
-      with:
-        files: |
-          ${{ steps.package.outputs.PKG_PATH }}
-          ${{ steps.debian-package.outputs.DEB_PATH }}
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+#    - name: Publish archives and packages
+#      uses: softprops/action-gh-release@v1
+#      with:
+#        files: |
+#          ${{ steps.package.outputs.PKG_PATH }}
+#          ${{ steps.debian-package.outputs.DEB_PATH }}
+#      env:
+#        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+#
