@@ -98,8 +98,7 @@ jobs:
         "${STRIP}" "target/${{ matrix.job.target }}/release/${BIN_NAME}"
         cp "target/${{ matrix.job.target }}/release/${BIN_NAME}" "${BIN_DIR}"
         # Let subsequent steps know where to find the (stripped) bin
-        echo ::set-output name=BIN_PATH::${BIN_PATH}
-        echo ::set-output name=BIN_NAME::${BIN_NAME}
+        echo "BIN_PATH=${BIN_PATH}" >> $GITHUB_OUTPUT
 
     - name: Set testing options
       id: test-options
@@ -108,7 +107,7 @@ jobs:
         # test only library unit tests and binary for arm-type targets
         unset CARGO_TEST_OPTIONS
         case ${{ matrix.job.target }} in arm-*-*) CARGO_TEST_OPTIONS="--lib --bin ${PROJECT_NAME}" ;; esac;
-        echo ::set-output name=CARGO_TEST_OPTIONS::${CARGO_TEST_OPTIONS}
+        echo "CARGO_TEST_OPTIONS=${CARGO_TEST_OPTIONS}" >> $GITHUB_OUTPUT
 
     - name: Run tests
       uses: actions-rs/cargo@v1
@@ -123,7 +122,7 @@ jobs:
       run: |
         PKG_BASENAME=${PROJECT_NAME}-${PROJECT_VERSION}-${{ matrix.job.target }}
         PKG_NAME=${PKG_BASENAME}.tar.gz
-        echo ::set-output name=PKG_NAME::${PKG_NAME}
+        echo "PKG_NAME=${PKG_NAME}" >> $GITHUB_OUTPUT
 
         PKG_STAGING="${{ env.CICD_INTERMEDIATES_DIR }}/package"
         ARCHIVE_DIR="${PKG_STAGING}/${PKG_BASENAME}/"
@@ -132,7 +131,7 @@ jobs:
         tar -C "${PKG_STAGING}/${PKG_BASENAME}" -cvzf "${PKG_STAGING}/${PKG_NAME}" "${PROJECT_NAME}" LICENSE
 
         # Let subsequent steps know where to find the compressed package
-        echo ::set-output name=PKG_PATH::"${PKG_STAGING}/${PKG_NAME}"
+        echo "PKG_PATH=${PKG_STAGING}/${PKG_NAME}" >> $GITHUB_OUTPUT
 
     - name: Install cargo-deb
       if: contains(matrix.job.target, 'musl')
@@ -147,8 +146,8 @@ jobs:
         DEB_PATH=target/${{ matrix.job.target }}/debian/*.deb
         DEB_NAME=$(basename ${DEB_PATH})
         echo Names are ${DEB_NAME} and ${DEB_PATH}
-        echo ::set-output name=DEB_NAME::${DEB_NAME}
-        echo ::set-output name=DEB_PATH::${DEB_PATH}
+        echo "DEB_NAME=${DEB_NAME}" >> $GITHUB_OUTPUT
+        echo "DEB_PATH=${DEB_PATH}" >> $GITHUB_OUTPUT
 
     - name: "Artifact upload: tarball"
       uses: actions/upload-artifact@v3
