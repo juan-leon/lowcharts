@@ -29,7 +29,7 @@ Currently six basic types of plots are supported:
 
 Since `grep -c` does not aggregate counts per pattern, this is maybe my most frequent use case.
 
-This chart is generated using `lowcharts matches database.log SELECT UPDATE DELETE INSERT DROP`:
+This chart is generated using `lowcharts matches --input database.log SELECT UPDATE DELETE INSERT DROP`:
 
 [![Simple bar chart with lowcharts](resources/matches-example.png)](resources/matches-example.png)
 
