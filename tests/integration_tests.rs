@@ -181,7 +181,7 @@ fn test_plot() {
                 .stdout(predicate::str::contains("\n[1.000] ●"))
                 .stderr(predicate::str::contains("[DEBUG] Cannot parse float"));
         }
-        Err(_) => assert!(false, "Could not create temp file"),
+        Err(_) => panic!("Could not create temp file"),
     }
 }
 
@@ -215,7 +215,7 @@ fn test_plot_precision() {
                 .stdout(predicate::str::contains("\n[1.0] ●"))
                 .stderr(predicate::str::contains("[DEBUG] Cannot parse float"));
         }
-        Err(_) => assert!(false, "Could not create temp file"),
+        Err(_) => panic!("Could not create temp file"),
     }
 }
 
@@ -257,6 +257,6 @@ fn test_common() {
                 .stdout(predicate::str::contains("\n[foo] [3] ∎∎∎\n"))
                 .stdout(predicate::str::contains("\n[  x] [2] ∎∎\n"));
         }
-        Err(_) => assert!(false, "Could not create temp file"),
+        Err(_) => panic!("Could not create temp file"),
     }
 }
