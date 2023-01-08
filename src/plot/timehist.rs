@@ -131,12 +131,13 @@ mod tests {
     #[test]
     fn test_big_time_interval() {
         Paint::disable();
-        let mut vec = Vec::<DateTime<FixedOffset>>::new();
-        vec.push(DateTime::parse_from_rfc3339("2021-04-15T04:25:00+00:00").unwrap());
-        vec.push(DateTime::parse_from_rfc3339("2022-04-15T04:25:00+00:00").unwrap());
-        vec.push(DateTime::parse_from_rfc3339("2022-04-15T04:25:00+00:00").unwrap());
-        vec.push(DateTime::parse_from_rfc3339("2022-04-15T04:25:00+00:00").unwrap());
-        vec.push(DateTime::parse_from_rfc3339("2023-04-15T04:25:00+00:00").unwrap());
+        let vec = vec![
+            DateTime::parse_from_rfc3339("2021-04-15T04:25:00+00:00").unwrap(),
+            DateTime::parse_from_rfc3339("2022-04-15T04:25:00+00:00").unwrap(),
+            DateTime::parse_from_rfc3339("2022-04-15T04:25:00+00:00").unwrap(),
+            DateTime::parse_from_rfc3339("2022-04-15T04:25:00+00:00").unwrap(),
+            DateTime::parse_from_rfc3339("2023-04-15T04:25:00+00:00").unwrap(),
+        ];
         let th = TimeHistogram::new(3, &vec);
         let display = format!("{}", th);
         assert!(display.contains("Matches: 5"));
@@ -149,10 +150,11 @@ mod tests {
     #[test]
     fn test_small_time_interval() {
         Paint::disable();
-        let mut vec = Vec::<DateTime<FixedOffset>>::new();
-        vec.push(DateTime::parse_from_rfc3339("2022-04-15T04:25:00.001+00:00").unwrap());
-        vec.push(DateTime::parse_from_rfc3339("2022-04-15T04:25:00.002+00:00").unwrap());
-        vec.push(DateTime::parse_from_rfc3339("2022-04-15T04:25:00.006+00:00").unwrap());
+        let vec = vec![
+            DateTime::parse_from_rfc3339("2022-04-15T04:25:00.001+00:00").unwrap(),
+            DateTime::parse_from_rfc3339("2022-04-15T04:25:00.002+00:00").unwrap(),
+            DateTime::parse_from_rfc3339("2022-04-15T04:25:00.006+00:00").unwrap(),
+        ];
         let th = TimeHistogram::new(4, &vec);
         let display = format!("{}", th);
         assert!(display.contains("Matches: 3"));
@@ -166,9 +168,10 @@ mod tests {
     #[test]
     fn test_single_timestamp() {
         Paint::disable();
-        let mut vec = Vec::<DateTime<FixedOffset>>::new();
-        vec.push(DateTime::parse_from_rfc3339("2022-04-15T04:25:00.001+00:00").unwrap());
-        vec.push(DateTime::parse_from_rfc3339("2022-04-15T04:25:00.001+00:00").unwrap());
+        let vec = vec![
+            DateTime::parse_from_rfc3339("2022-04-15T04:25:00.001+00:00").unwrap(),
+            DateTime::parse_from_rfc3339("2022-04-15T04:25:00.001+00:00").unwrap(),
+        ];
         let th = TimeHistogram::new(4, &vec);
         let display = format!("{}", th);
         assert!(display.contains("Matches: 2"));

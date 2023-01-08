@@ -177,23 +177,24 @@ mod tests {
     #[test]
     fn test_big_time_interval() {
         Paint::disable();
-        let mut vec = Vec::<(DateTime<FixedOffset>, usize)>::new();
-        vec.push((
-            DateTime::parse_from_rfc3339("2021-04-15T04:25:00+00:00").unwrap(),
-            1,
-        ));
-        vec.push((
-            DateTime::parse_from_rfc3339("2022-04-15T04:25:00+00:00").unwrap(),
-            1,
-        ));
-        vec.push((
-            DateTime::parse_from_rfc3339("2022-04-15T04:25:00+00:00").unwrap(),
-            0,
-        ));
-        vec.push((
-            DateTime::parse_from_rfc3339("2022-04-15T04:25:00+00:00").unwrap(),
-            2,
-        ));
+        let mut vec = vec![
+            (
+                DateTime::parse_from_rfc3339("2021-04-15T04:25:00+00:00").unwrap(),
+                1,
+            ),
+            (
+                DateTime::parse_from_rfc3339("2022-04-15T04:25:00+00:00").unwrap(),
+                1,
+            ),
+            (
+                DateTime::parse_from_rfc3339("2022-04-15T04:25:00+00:00").unwrap(),
+                0,
+            ),
+            (
+                DateTime::parse_from_rfc3339("2022-04-15T04:25:00+00:00").unwrap(),
+                2,
+            ),
+        ];
         for _ in 0..11 {
             vec.push((
                 DateTime::parse_from_rfc3339("2023-04-15T04:25:00+00:00").unwrap(),
