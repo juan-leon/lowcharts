@@ -95,9 +95,9 @@ impl DataReader {
                 Ok(as_string) => {
                     if let Some(cap) = regex.captures(&as_string) {
                         if let Some(name) = cap.name("value") {
-                            terms.observe(String::from(name.as_str()))
+                            terms.observe(String::from(name.as_str()));
                         } else if let Some(capture) = cap.get(1) {
-                            terms.observe(String::from(capture.as_str()))
+                            terms.observe(String::from(capture.as_str()));
                         }
                     };
                 }

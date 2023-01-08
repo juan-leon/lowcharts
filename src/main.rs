@@ -112,7 +112,7 @@ fn histogram(matches: &ArgMatches) -> i32 {
     let mut options = plot::HistogramOptions::default();
     let precision_arg: i32 = matches.value_of_t("precision").unwrap();
     if precision_arg > 0 {
-        options.precision = Some(precision_arg as usize)
+        options.precision = Some(precision_arg as usize);
     };
     options.intervals = matches.value_of_t("intervals").unwrap();
     let width = matches.value_of_t("width").unwrap();

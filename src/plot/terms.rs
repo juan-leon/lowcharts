@@ -29,7 +29,7 @@ impl CommonTerms {
 
     /// Observe a new "term".
     pub fn observe(&mut self, term: String) {
-        *self.terms.entry(term).or_insert(0) += 1
+        *self.terms.entry(term).or_insert(0) += 1;
     }
 }
 

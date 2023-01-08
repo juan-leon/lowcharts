@@ -38,7 +38,7 @@ impl Stats {
         for val in vec.iter() {
             max = max.max(*val);
             min = min.min(*val);
-            temp += (avg - *val).powi(2)
+            temp += (avg - *val).powi(2);
         }
         let var = temp / vec.len() as f64;
         let std = var.sqrt();

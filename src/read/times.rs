@@ -41,7 +41,7 @@ impl TimeReader {
         if let Ok(x) = parser.parse(&first_line) {
             if self.early_stop {
                 if let Some(duration) = self.duration {
-                    cut_datetime = Some(x + duration)
+                    cut_datetime = Some(x + duration);
                 }
             }
             self.push_conditionally(x, &mut vec, &first_line, None);
