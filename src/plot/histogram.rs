@@ -68,7 +68,7 @@ impl Histogram {
         let stats = Stats::new(vec, options.precision);
         let size = options.intervals.min(vec.len());
         let step = (stats.max - stats.min) / size as f64;
-        let mut histogram = Self::new_with_stats(step, stats, options);
+        let mut histogram = Self::new_with_stats(step, stats, &options);
         histogram.load(vec);
         histogram
     }
@@ -79,7 +79,7 @@ impl Histogram {
     /// Parameters are similar to those on the `new` method, but a parameter
     /// named `stats` is needed to decide how future data (to be injected with
     /// the load method) will be accommodated.
-    pub fn new_with_stats(step: f64, stats: Stats, options: HistogramOptions) -> Self {
+    pub fn new_with_stats(step: f64, stats: Stats, options: &HistogramOptions) -> Self {
         let mut vec = Vec::<Bucket>::with_capacity(options.intervals);
         let mut lower = stats.min;
         for _ in 0..options.intervals {
@@ -88,7 +88,7 @@ impl Histogram {
         }
         Self {
             vec,
-            max: stats.min + (step * options.intervals as f64),
+            max: step.mul_add(options.intervals as f64, stats.min),
             step,
             top: 0,
             last: options.intervals - 1,
@@ -148,7 +148,7 @@ impl HistWriter {
         let horizontal_scale =
             HorizontalScale::new(hist.top / self.get_max_bar_len(width_range + width_count));
         writeln!(f, "{horizontal_scale}")?;
-        for x in hist.vec.iter() {
+        for x in &hist.vec {
             self.write_bucket(f, x, &horizontal_scale, width_range, width_count)?;
         }
         Ok(())
@@ -205,7 +205,7 @@ mod tests {
             intervals: 8,
             ..Default::default()
         };
-        let mut hist = Histogram::new_with_stats(2.5, stats, options);
+        let mut hist = Histogram::new_with_stats(2.5, stats, &options);
         hist.load(&[
             -1.0, -1.1, 2.0, 2.0, 2.1, -0.9, 11.0, 11.2, 1.9, 1.99, 1.98, 1.97, 1.96,
         ]);
@@ -225,7 +225,7 @@ mod tests {
             intervals: 6,
             ..Default::default()
         };
-        let mut hist = Histogram::new_with_stats(1.0, Stats::new(&[-2.0, 4.0], None), options);
+        let mut hist = Histogram::new_with_stats(1.0, Stats::new(&[-2.0, 4.0], None), &options);
         hist.load(&[-1.0, 2.0, -1.0, 2.0, 10.0, 10.0, 10.0, -10.0]);
         assert_eq!(hist.top, 2);
     }
@@ -238,7 +238,7 @@ mod tests {
             precision: Some(3),
             log_scale: false,
         };
-        let mut hist = Histogram::new_with_stats(2.5, stats, options);
+        let mut hist = Histogram::new_with_stats(2.5, stats, &options);
         hist.load(&[
             -1.0, -1.1, 2.0, 2.0, 2.1, -0.9, 11.0, 11.2, 1.9, 1.99, 1.98, 1.97, 1.96,
         ]);
@@ -256,7 +256,7 @@ mod tests {
             precision: Some(3),
             log_scale: false,
         };
-        let mut hist = Histogram::new_with_stats(2.5, Stats::new(&[-2.0, 14.0], None), options);
+        let mut hist = Histogram::new_with_stats(2.5, Stats::new(&[-2.0, 14.0], None), &options);
         hist.load(&[
             -1.0, -1.1, 2.0, 2.0, 2.1, -0.9, 11.0, 11.2, 1.9, 1.99, 1.98, 1.97, 1.96,
         ]);

@@ -69,7 +69,7 @@ impl XyPlot {
         }
         let step = (self.stats.max - self.stats.min) / self.height as f64;
         for y in 0..self.height {
-            self.y_axis.push(self.stats.min + step * y as f64);
+            self.y_axis.push(step.mul_add(y as f64, self.stats.min));
         }
     }
 }
@@ -77,7 +77,6 @@ impl XyPlot {
 impl fmt::Display for XyPlot {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{}", self.stats)?;
-        let _step = (self.stats.max - self.stats.min) / self.height as f64;
         let f64fmt = match self.precision {
             None => F64Formatter::new_with_range(self.stats.min..self.stats.max),
             Some(n) => F64Formatter::new(n),
@@ -88,7 +87,7 @@ impl fmt::Display for XyPlot {
             .map(|v| f64fmt.format(*v).len())
             .max()
             .unwrap();
-        let mut newvec = self.y_axis.to_vec();
+        let mut newvec = self.y_axis.clone();
         newvec.reverse();
         print_line(f, &self.x_axis, newvec[0]..f64::INFINITY, y_width, &f64fmt)?;
         for y in newvec.windows(2) {
@@ -110,7 +109,7 @@ fn print_line(
     // because of unicode char ● having more bytes than ascii chars.
     for (x, value) in x_axis.iter().enumerate().rev() {
         if range.contains(value) {
-            row.replace_range(x..x + 1, "●".as_ref());
+            row.replace_range(x..=x, "●".as_ref());
         }
     }
     writeln!(

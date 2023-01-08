@@ -24,7 +24,7 @@ impl F64Formatter {
         Self {
             decimals,
             divisor: 0,
-            suffix: "".to_owned(),
+            suffix: String::new(),
         }
     }
 

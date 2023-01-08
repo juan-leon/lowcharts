@@ -162,7 +162,7 @@ impl fmt::Display for SplitTimeHistogram {
         }
         writeln!(f, "{horizontal_scale}")?;
         let ts_fmt = date_fmt_string(self.step.num_seconds());
-        for row in self.vec.iter() {
+        for row in &self.vec {
             self.fmt_row(f, row, horizontal_scale.get_scale(), &widths, ts_fmt)?;
         }
         Ok(())

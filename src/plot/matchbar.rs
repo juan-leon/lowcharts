@@ -41,7 +41,7 @@ impl MatchBar {
     pub fn new(vec: Vec<MatchBarRow>) -> Self {
         let mut top_lenght: usize = 0;
         let mut top_values: usize = 0;
-        for row in vec.iter() {
+        for row in &vec {
             top_lenght = top_lenght.max(row.label.len());
             top_values = top_values.max(row.count);
         }
@@ -67,7 +67,7 @@ impl fmt::Display for MatchBar {
             )),
         )?;
         writeln!(f, "{horizontal_scale}")?;
-        for row in self.vec.iter() {
+        for row in &self.vec {
             writeln!(
                 f,
                 "[{label}] [{count}] {bar}",

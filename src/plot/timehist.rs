@@ -110,7 +110,7 @@ impl fmt::Display for TimeHistogram {
         )?;
         writeln!(f, "{horizontal_scale}")?;
         let ts_fmt = date_fmt_string(self.step.num_seconds());
-        for row in self.vec.iter() {
+        for row in &self.vec {
             writeln!(
                 f,
                 "[{label}] [{count}] {bar}",
