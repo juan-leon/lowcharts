@@ -28,7 +28,7 @@ impl MatchBarRow {
 }
 
 #[derive(Debug)]
-/// A struct holding data to plot a MatchBar: a histogram of the number of
+/// A struct holding data to plot a `MatchBar`: a histogram of the number of
 /// occurrences of a set of strings in some input dara.
 pub struct MatchBar {
     pub vec: Vec<MatchBarRow>,
@@ -37,7 +37,7 @@ pub struct MatchBar {
 }
 
 impl MatchBar {
-    /// Creates a Histogram from a vector of MatchBarRow elements.
+    /// Creates a Histogram from a vector of `MatchBarRow` elements.
     pub fn new(vec: Vec<MatchBarRow>) -> MatchBar {
         let mut top_lenght: usize = 0;
         let mut top_values: usize = 0;

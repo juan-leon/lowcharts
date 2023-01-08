@@ -18,7 +18,7 @@ pub struct XyPlot {
 }
 
 impl XyPlot {
-    /// Creates a XyPlot from a vector of numerical data.
+    /// Creates a `XyPlot` from a vector of numerical data.
     ///
     /// `width` is the number of "columns" to display (capped to the length of
     /// input data).  The data in every column is the average of the y-values
@@ -37,7 +37,7 @@ impl XyPlot {
         plot
     }
 
-    /// Creates a XyPlot with no input data.
+    /// Creates a `XyPlot` with no input data.
     ///
     /// Parameters are similar to those on the `new` method, but a parameter
     /// named `stats` is needed to decide how future data (to be injected with

@@ -45,12 +45,12 @@ pub struct SplitTimeHistogram {
 }
 
 impl SplitTimeHistogram {
-    /// Creates a SplitTimeHistogram from a vector of `strings` (the terms whose
+    /// Creates a `SplitTimeHistogram` from a vector of `strings` (the terms whose
     /// frequency we want to display) and a vector of timestamps where the terms
     /// appear.
     ///
     /// `size` is the number of time slots in the histogram.  Parameter 'ts' is
-    /// a slice of tuples of DateTime (the timestamp of a term occurrence) and
+    /// a slice of tuples of `DateTime` (the timestamp of a term occurrence) and
     /// the index of the term in the `strings` parameter.
     pub fn new(
         size: usize,
@@ -79,7 +79,7 @@ impl SplitTimeHistogram {
     }
 
     /// Add to the `SplitTimeHistogram` data the values of a slice of tuples of
-    /// DateTime (the timestamp of a term occurrence) and the index of the term
+    /// `DateTime` (the timestamp of a term occurrence) and the index of the term
     /// in the in the list of common terms.
     pub fn load(&mut self, vec: &[(DateTime<FixedOffset>, usize)]) {
         for x in vec {

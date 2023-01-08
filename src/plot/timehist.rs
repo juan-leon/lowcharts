@@ -23,7 +23,7 @@ impl TimeBucket {
 }
 
 #[derive(Debug)]
-/// A struct holding data to plot a TimeHistogram of timestamp data.
+/// A struct holding data to plot a `TimeHistogram` of timestamp data.
 pub struct TimeHistogram {
     vec: Vec<TimeBucket>,
     min: DateTime<FixedOffset>,
@@ -35,7 +35,7 @@ pub struct TimeHistogram {
 }
 
 impl TimeHistogram {
-    /// Creates a Histogram from a vector of DateTime elements.
+    /// Creates a Histogram from a vector of `DateTime` elements.
     ///
     /// `size` is the number of histogram buckets to display.
     pub fn new(size: usize, ts: &[DateTime<FixedOffset>]) -> TimeHistogram {
@@ -60,7 +60,7 @@ impl TimeHistogram {
         timehist
     }
 
-    /// Add to the `TimeHistogram` data the values of a slice of DateTime
+    /// Add to the `TimeHistogram` data the values of a slice of `DateTime`
     /// elements.  Elements not in the initial range (the one passed to `new`)
     /// will be silently discarded.
     pub fn load(&mut self, vec: &[DateTime<FixedOffset>]) {
@@ -69,7 +69,7 @@ impl TimeHistogram {
         }
     }
 
-    /// Add to the `TimeHistogram` another DateTime element.  If element is not
+    /// Add to the `TimeHistogram` another `DateTime` element.  If element is not
     /// in the initial range (the one passed to `new`), it will be silently
     /// discarded.
     pub fn add(&mut self, ts: DateTime<FixedOffset>) {

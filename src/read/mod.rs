@@ -10,7 +10,7 @@ mod times;
 use std::fs::File;
 use std::io::{self, BufReader};
 
-/// Return io::BufRead from a path, falling back to using stdin if path is "-".
+/// Return `io::BufRead` from a path, falling back to using stdin if path is "-".
 /// Exits the program with exit code 1 if path does not exist.
 fn open_file(path: &str) -> Box<dyn io::BufRead> {
     match path {
