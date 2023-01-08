@@ -13,8 +13,8 @@ pub struct MatchBarRow {
 }
 
 impl MatchBarRow {
-    pub fn new(string: &str) -> MatchBarRow {
-        MatchBarRow {
+    pub fn new(string: &str) -> Self {
+        Self {
             label: string.to_string(),
             count: 0,
         }
@@ -38,14 +38,14 @@ pub struct MatchBar {
 
 impl MatchBar {
     /// Creates a Histogram from a vector of `MatchBarRow` elements.
-    pub fn new(vec: Vec<MatchBarRow>) -> MatchBar {
+    pub fn new(vec: Vec<MatchBarRow>) -> Self {
         let mut top_lenght: usize = 0;
         let mut top_values: usize = 0;
         for row in vec.iter() {
             top_lenght = top_lenght.max(row.label.len());
             top_values = top_values.max(row.count);
         }
-        MatchBar {
+        Self {
             vec,
             top_values,
             top_lenght,

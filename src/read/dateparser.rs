@@ -28,14 +28,14 @@ pub struct LogDateParser {
 }
 
 impl LogDateParser {
-    pub fn new(log_line: &str, format_string: &Option<String>) -> Result<LogDateParser, String> {
+    pub fn new(log_line: &str, format_string: &Option<String>) -> Result<Self, String> {
         match format_string {
             Some(ts_format) => Self::new_with_format(log_line, ts_format),
             None => Self::new_with_guess(log_line),
         }
     }
 
-    fn new_with_guess(log_line: &str) -> Result<LogDateParser, String> {
+    fn new_with_guess(log_line: &str) -> Result<Self, String> {
         // All the guess work assume that datetimes start with a digit, and that
         // digit is the first digit in the log line.  The approach is to locate
         // the 1st digit and then try to parse as much text as possible with any
@@ -45,7 +45,7 @@ impl LogDateParser {
             if c.is_ascii_digit() {
                 for j in (i..(i + MAX_LEN).min(log_line.len() + 1)).rev() {
                     if let Some(parser) = Self::guess_parser(&log_line[i..j]) {
-                        return Ok(LogDateParser {
+                        return Ok(Self {
                             range: i..j,
                             parser,
                         });
@@ -57,14 +57,14 @@ impl LogDateParser {
         Err(format!("Could not parse a timestamp in {}", log_line))
     }
 
-    fn new_with_format(log_line: &str, format_string: &str) -> Result<LogDateParser, String> {
+    fn new_with_format(log_line: &str, format_string: &str) -> Result<Self, String> {
         // We look for where the timestamp is in logs using a brute force
         // approach with 1st log line, but capping the max length we scan for
         for i in 0..log_line.len() {
             for j in (i..(i + (MAX_LEN * 2)).min(log_line.len() + 1)).rev() {
                 if NaiveDateTime::parse_from_str(&log_line[i..j], format_string).is_ok() {
                     let fmt = Box::new(format_string.to_string());
-                    return Ok(LogDateParser {
+                    return Ok(Self {
                         range: i..j,
                         parser: Box::new(move |string: &str| {
                             match NaiveDateTime::parse_from_str(string, &fmt) {

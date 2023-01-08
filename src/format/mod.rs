@@ -20,8 +20,8 @@ pub struct F64Formatter {
 
 impl F64Formatter {
     /// Initializes a new `HumanF64Formatter` with default values.
-    pub fn new(decimals: usize) -> F64Formatter {
-        F64Formatter {
+    pub fn new(decimals: usize) -> Self {
+        Self {
             decimals,
             divisor: 0,
             suffix: "".to_owned(),
@@ -30,14 +30,14 @@ impl F64Formatter {
 
     /// Initializes a new `HumanF64Formatter` for formatting numbers in the
     /// provided range.
-    pub fn new_with_range(range: Range<f64>) -> F64Formatter {
+    pub fn new_with_range(range: Range<f64>) -> Self {
         // Range
         let mut decimals = 3;
         let mut divisor = 0_u8;
         let mut suffix = UNITS[0].to_owned();
         let difference = range.end - range.start;
         if difference == 0.0 {
-            return F64Formatter {
+            return Self {
                 decimals,
                 divisor,
                 suffix,
@@ -51,7 +51,7 @@ impl F64Formatter {
             divisor = ((log - 1) / 3).min(5) as u8;
         }
         suffix = UNITS[divisor as usize].to_owned();
-        F64Formatter {
+        Self {
             decimals,
             divisor,
             suffix,
@@ -74,8 +74,8 @@ pub struct HorizontalScale {
 }
 
 impl HorizontalScale {
-    pub fn new(scale: usize) -> HorizontalScale {
-        HorizontalScale {
+    pub fn new(scale: usize) -> Self {
+        Self {
             scale: 1.max(scale),
         }
     }

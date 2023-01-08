@@ -13,8 +13,8 @@ struct TimeBucket {
 }
 
 impl TimeBucket {
-    fn new(start: DateTime<FixedOffset>) -> TimeBucket {
-        TimeBucket { start, count: 0 }
+    fn new(start: DateTime<FixedOffset>) -> Self {
+        Self { start, count: 0 }
     }
 
     fn inc(&mut self) {
@@ -38,7 +38,7 @@ impl TimeHistogram {
     /// Creates a Histogram from a vector of `DateTime` elements.
     ///
     /// `size` is the number of histogram buckets to display.
-    pub fn new(size: usize, ts: &[DateTime<FixedOffset>]) -> TimeHistogram {
+    pub fn new(size: usize, ts: &[DateTime<FixedOffset>]) -> Self {
         let mut vec = Vec::<TimeBucket>::with_capacity(size);
         let min = *ts.iter().min().unwrap();
         let max = *ts.iter().max().unwrap();
@@ -47,7 +47,7 @@ impl TimeHistogram {
         for i in 0..size {
             vec.push(TimeBucket::new(min + (inc * i as i32)));
         }
-        let mut timehist = TimeHistogram {
+        let mut timehist = Self {
             vec,
             min,
             max,

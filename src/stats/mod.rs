@@ -29,7 +29,7 @@ impl Stats {
     /// `precision` is an Option with the number of decimals to display.  If
     /// "None" is used, human units will be used, with an heuristic based on the
     /// input data for deciding the units and the decimal places.
-    pub fn new(vec: &[f64], precision: Option<usize>) -> Stats {
+    pub fn new(vec: &[f64], precision: Option<usize>) -> Self {
         let mut max = vec[0];
         let mut min = max;
         let mut temp: f64 = 0.0;
@@ -42,7 +42,7 @@ impl Stats {
         }
         let var = temp / vec.len() as f64;
         let std = var.sqrt();
-        Stats {
+        Self {
             min,
             max,
             avg,

@@ -20,8 +20,8 @@ impl CommonTerms {
     /// Create and empty `CommonTerms`.
     ///
     /// `lines` is the number of lines to be displayed.
-    pub fn new(lines: usize) -> CommonTerms {
-        CommonTerms {
+    pub fn new(lines: usize) -> Self {
+        Self {
             terms: HashMap::new(),
             lines,
         }

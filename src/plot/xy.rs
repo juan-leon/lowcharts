@@ -31,8 +31,8 @@ impl XyPlot {
     /// `precision` is an Option with the number of decimals to display.  If
     /// "None" is used, human units will be used, with an heuristic based on the
     /// input data for deciding the units and the decimal places.
-    pub fn new(vec: &[f64], width: usize, height: usize, precision: Option<usize>) -> XyPlot {
-        let mut plot = XyPlot::new_with_stats(width, height, Stats::new(vec, precision), precision);
+    pub fn new(vec: &[f64], width: usize, height: usize, precision: Option<usize>) -> Self {
+        let mut plot = Self::new_with_stats(width, height, Stats::new(vec, precision), precision);
         plot.load(vec);
         plot
     }
@@ -47,8 +47,8 @@ impl XyPlot {
         height: usize,
         stats: Stats,
         precision: Option<usize>,
-    ) -> XyPlot {
-        XyPlot {
+    ) -> Self {
+        Self {
             x_axis: Vec::with_capacity(width),
             y_axis: Vec::with_capacity(height),
             width,

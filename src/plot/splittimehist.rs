@@ -15,8 +15,8 @@ struct TimeBucket {
 }
 
 impl TimeBucket {
-    fn new(start: DateTime<FixedOffset>, counts: usize) -> TimeBucket {
-        TimeBucket {
+    fn new(start: DateTime<FixedOffset>, counts: usize) -> Self {
+        Self {
             start,
             count: vec![0; counts],
         }
@@ -52,11 +52,7 @@ impl SplitTimeHistogram {
     /// `size` is the number of time slots in the histogram.  Parameter 'ts' is
     /// a slice of tuples of `DateTime` (the timestamp of a term occurrence) and
     /// the index of the term in the `strings` parameter.
-    pub fn new(
-        size: usize,
-        strings: Vec<String>,
-        ts: &[(DateTime<FixedOffset>, usize)],
-    ) -> SplitTimeHistogram {
+    pub fn new(size: usize, strings: Vec<String>, ts: &[(DateTime<FixedOffset>, usize)]) -> Self {
         let mut vec = Vec::<TimeBucket>::with_capacity(size);
         let min = ts.iter().min().unwrap().0;
         let max = ts.iter().max().unwrap().0;
@@ -65,7 +61,7 @@ impl SplitTimeHistogram {
         for i in 0..size {
             vec.push(TimeBucket::new(min + (inc * i as i32), strings.len()));
         }
-        let mut sth = SplitTimeHistogram {
+        let mut sth = Self {
             vec,
             strings,
             min,

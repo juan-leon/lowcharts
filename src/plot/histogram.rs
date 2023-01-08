@@ -14,8 +14,8 @@ struct Bucket {
 }
 
 impl Bucket {
-    fn new(range: Range<f64>) -> Bucket {
-        Bucket { range, count: 0 }
+    fn new(range: Range<f64>) -> Self {
+        Self { range, count: 0 }
     }
 
     fn inc(&mut self) {
@@ -63,12 +63,12 @@ impl Histogram {
     /// `precision` is an Option with the number of decimals to display.  If
     /// "None" is used, human units will be used, with an heuristic based on the
     /// input data for deciding the units and the decimal places.
-    pub fn new(vec: &[f64], mut options: HistogramOptions) -> Histogram {
+    pub fn new(vec: &[f64], mut options: HistogramOptions) -> Self {
         options.intervals = options.intervals.min(vec.len());
         let stats = Stats::new(vec, options.precision);
         let size = options.intervals.min(vec.len());
         let step = (stats.max - stats.min) / size as f64;
-        let mut histogram = Histogram::new_with_stats(step, stats, options);
+        let mut histogram = Self::new_with_stats(step, stats, options);
         histogram.load(vec);
         histogram
     }
@@ -79,14 +79,14 @@ impl Histogram {
     /// Parameters are similar to those on the `new` method, but a parameter
     /// named `stats` is needed to decide how future data (to be injected with
     /// the load method) will be accommodated.
-    pub fn new_with_stats(step: f64, stats: Stats, options: HistogramOptions) -> Histogram {
+    pub fn new_with_stats(step: f64, stats: Stats, options: HistogramOptions) -> Self {
         let mut vec = Vec::<Bucket>::with_capacity(options.intervals);
         let mut lower = stats.min;
         for _ in 0..options.intervals {
             vec.push(Bucket::new(lower..lower + step));
             lower += step;
         }
-        Histogram {
+        Self {
             vec,
             max: stats.min + (step * options.intervals as f64),
             step,
