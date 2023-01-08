@@ -230,6 +230,6 @@ mod tests {
     #[test]
     fn test_horizontal_scale_count() {
         let scale = HorizontalScale::new(10);
-        assert_eq!(scale.get_count(80, 5), Green.paint(format!("   80")));
+        assert_eq!(scale.get_count(80, 5), Green.paint("   80".to_string()));
     }
 }
