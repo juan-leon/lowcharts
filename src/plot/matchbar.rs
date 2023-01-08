@@ -66,7 +66,7 @@ impl fmt::Display for MatchBar {
                 self.vec.iter().map(|r| r.count).sum::<usize>()
             )),
         )?;
-        writeln!(f, "{}", horizontal_scale)?;
+        writeln!(f, "{horizontal_scale}")?;
         for row in self.vec.iter() {
             writeln!(
                 f,
@@ -98,7 +98,7 @@ mod tests {
         assert_eq!(mb.top_lenght, 8);
         assert_eq!(mb.top_values, 3);
         Paint::disable();
-        let display = format!("{}", mb);
+        let display = format!("{mb}");
 
         assert!(display.contains("[label1  ] [3] ∎∎∎\n"));
         assert!(display.contains("[label2  ] [1] ∎\n"));

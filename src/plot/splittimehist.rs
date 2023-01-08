@@ -155,12 +155,12 @@ impl fmt::Display for SplitTimeHistogram {
             })
             .collect();
 
-        writeln!(f, "Matches: {}.", total)?;
+        writeln!(f, "Matches: {total}.")?;
         for (i, s) in self.strings.iter().enumerate() {
             let total = self.vec.iter().map(|r| r.count[i]).sum::<usize>();
-            writeln!(f, "{}: {}.", COLORS[i].paint(s), total)?;
+            writeln!(f, "{}: {total}.", COLORS[i].paint(s))?;
         }
-        writeln!(f, "{}", horizontal_scale)?;
+        writeln!(f, "{horizontal_scale}")?;
         let ts_fmt = date_fmt_string(self.step.num_seconds());
         for row in self.vec.iter() {
             self.fmt_row(f, row, horizontal_scale.get_scale(), &widths, ts_fmt)?;
@@ -206,8 +206,8 @@ mod tests {
             vec!["one".to_string(), "two".to_string(), "three".to_string()],
             &vec,
         );
-        println!("{}", th);
-        let display = format!("{}", th);
+        println!("{th}");
+        let display = format!("{th}");
         assert!(display.contains("Matches: 15"));
         assert!(display.contains("one: 1."));
         assert!(display.contains("two: 2."));

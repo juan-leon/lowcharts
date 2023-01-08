@@ -151,7 +151,7 @@ mod tests {
         let mut plot = XyPlot::new_with_stats(3, 5, stats, Some(3));
         plot.load(&[-1.0, 0.0, 1.0, 2.0, 3.0, 4.0, -1.0]);
         Paint::disable();
-        let display = format!("{}", plot);
+        let display = format!("{plot}");
         assert!(display.contains("[ 3.000]   ● "));
         assert!(display.contains("[ 2.000]     "));
         assert!(display.contains("[ 1.000]  ●  "));
@@ -163,7 +163,7 @@ mod tests {
         let vector = &[1000000.0, -1000000.0, -2000000.0, -4000000.0];
         let plot = XyPlot::new(vector, 3, 5, None);
         Paint::disable();
-        let display = format!("{}", plot);
+        let display = format!("{plot}");
         assert!(display.contains("[    0 K] ●   "));
         assert!(display.contains("[-1000 K]  ●  "));
         assert!(display.contains("[-2000 K]   ● "));

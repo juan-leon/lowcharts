@@ -61,7 +61,7 @@ fn configure_output(option: &str, verbose: bool) {
         color_choice,
     ) {
         // We trigger this error when unit testing this fn
-        eprintln!("Error: {}", err);
+        eprintln!("Error: {err}");
     }
 }
 
@@ -117,7 +117,7 @@ fn histogram(matches: &ArgMatches) -> i32 {
     options.intervals = matches.value_of_t("intervals").unwrap();
     let width = matches.value_of_t("width").unwrap();
     let histogram = plot::Histogram::new(&vec, options);
-    print!("{:width$}", histogram, width = width);
+    print!("{histogram:width$}");
     0
 }
 
@@ -143,7 +143,7 @@ fn plot(matches: &ArgMatches) -> i32 {
         matches.value_of_t("height").unwrap(),
         precision,
     );
-    print!("{}", plot);
+    print!("{plot}");
     0
 }
 
@@ -225,7 +225,7 @@ fn timehist(matches: &ArgMatches) -> i32 {
     let vec = reader.read(matches.value_of("input").unwrap());
     if assert_data(&vec, 2) {
         let timehist = plot::TimeHistogram::new(matches.value_of_t("intervals").unwrap(), &vec);
-        print!("{:width$}", timehist, width = width);
+        print!("{timehist:width$}");
     };
     0
 }
@@ -257,7 +257,7 @@ fn splittime(matches: &ArgMatches) -> i32 {
             string_list,
             &vec,
         );
-        print!("{:width$}", timehist, width = width);
+        print!("{timehist:width$}");
     };
     0
 }

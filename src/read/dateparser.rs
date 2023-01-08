@@ -54,7 +54,7 @@ impl LogDateParser {
                 break;
             }
         }
-        Err(format!("Could not parse a timestamp in {}", log_line))
+        Err(format!("Could not parse a timestamp in {log_line}"))
     }
 
     fn new_with_format(log_line: &str, format_string: &str) -> Result<Self, String> {

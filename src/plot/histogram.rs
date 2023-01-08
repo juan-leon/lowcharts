@@ -147,7 +147,7 @@ impl HistWriter {
         let width_count = ((hist.top as f64).log10().ceil() as usize).max(1);
         let horizontal_scale =
             HorizontalScale::new(hist.top / self.get_max_bar_len(width_range + width_count));
-        writeln!(f, "{}", horizontal_scale)?;
+        writeln!(f, "{horizontal_scale}")?;
         for x in hist.vec.iter() {
             self.write_bucket(f, x, &horizontal_scale, width_range, width_count)?;
         }
@@ -243,7 +243,7 @@ mod tests {
             -1.0, -1.1, 2.0, 2.0, 2.1, -0.9, 11.0, 11.2, 1.9, 1.99, 1.98, 1.97, 1.96,
         ]);
         Paint::disable();
-        let display = format!("{}", hist);
+        let display = format!("{hist}");
         assert!(display.contains("[-2.000 ..  0.500] [3] ∎∎∎\n"));
         assert!(display.contains("[ 0.500 ..  3.000] [8] ∎∎∎∎∎∎∎∎\n"));
         assert!(display.contains("[10.500 .. 13.000] [2] ∎∎\n"));
@@ -261,7 +261,7 @@ mod tests {
             -1.0, -1.1, 2.0, 2.0, 2.1, -0.9, 11.0, 11.2, 1.9, 1.99, 1.98, 1.97, 1.96,
         ]);
         Paint::disable();
-        let display = format!("{:2}", hist);
+        let display = format!("{hist:2}");
         assert!(display.contains("[-2.000 ..  0.500] [3] ∎∎∎\n"));
     }
 
@@ -279,7 +279,7 @@ mod tests {
         ];
         let hist = Histogram::new(vector, HistogramOptions::default());
         Paint::disable();
-        let display = format!("{}", hist);
+        let display = format!("{hist}");
         assert!(display.contains("[-12.0 M .. -10.4 M] [4] ∎∎∎∎\n"));
         assert!(display.contains("[ -2.6 M ..  -1.1 M] [1] ∎\n"));
         assert!(display.contains("[ -1.1 M ..   0.5 M] [3] ∎∎∎\n"));

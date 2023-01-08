@@ -85,7 +85,7 @@ impl HorizontalScale {
     }
 
     pub fn get_count(&self, units: usize, width: usize) -> Paint<String> {
-        Green.paint(format!("{:width$}", units, width = width))
+        Green.paint(format!("{units:width$}"))
     }
 
     pub fn get_scale(&self) -> usize {
@@ -213,7 +213,7 @@ mod tests {
         let scale = HorizontalScale::new(0);
         assert_eq!(scale.get_scale(), 1);
         assert_eq!(
-            format!("{}", scale),
+            format!("{scale}"),
             format!("Each {BAR_CHAR} represents a count of 1\n")
         );
     }

@@ -108,7 +108,7 @@ impl fmt::Display for TimeHistogram {
                 self.vec.iter().map(|r| r.count).sum::<usize>()
             )),
         )?;
-        writeln!(f, "{}", horizontal_scale)?;
+        writeln!(f, "{horizontal_scale}")?;
         let ts_fmt = date_fmt_string(self.step.num_seconds());
         for row in self.vec.iter() {
             writeln!(
@@ -139,7 +139,7 @@ mod tests {
             DateTime::parse_from_rfc3339("2023-04-15T04:25:00+00:00").unwrap(),
         ];
         let th = TimeHistogram::new(3, &vec);
-        let display = format!("{}", th);
+        let display = format!("{th}");
         assert!(display.contains("Matches: 5"));
         assert!(display.contains("represents a count of 1"));
         assert!(display.contains("[2021-04-15 04:25:00] [1] ∎\n"));
@@ -156,7 +156,7 @@ mod tests {
             DateTime::parse_from_rfc3339("2022-04-15T04:25:00.006+00:00").unwrap(),
         ];
         let th = TimeHistogram::new(4, &vec);
-        let display = format!("{}", th);
+        let display = format!("{th}");
         assert!(display.contains("Matches: 3"));
         assert!(display.contains("represents a count of 1"));
         assert!(display.contains("[04:25:00.001000] [2] ∎∎\n"));
@@ -173,7 +173,7 @@ mod tests {
             DateTime::parse_from_rfc3339("2022-04-15T04:25:00.001+00:00").unwrap(),
         ];
         let th = TimeHistogram::new(4, &vec);
-        let display = format!("{}", th);
+        let display = format!("{th}");
         assert!(display.contains("Matches: 2"));
         assert!(display.contains("represents a count of 1"));
         assert!(display.contains("[04:25:00.001000] [2] ∎∎\n"));

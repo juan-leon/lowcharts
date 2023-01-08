@@ -46,12 +46,12 @@ impl fmt::Display for CommonTerms {
         let label_width = values.iter().fold(1, |acc, x| acc.max(x.0.len()));
         let horizontal_scale = HorizontalScale::new(counts[0].1 / width);
         let width_count = format!("{}", counts[0].1).len();
-        writeln!(f, "{}", horizontal_scale)?;
+        writeln!(f, "{horizontal_scale}")?;
         for (term, count) in values.iter() {
             writeln!(
                 f,
                 "[{label}] [{count}] {bar}",
-                label = Blue.paint(format!("{:>width$}", term, width = label_width)),
+                label = Blue.paint(format!("{term:>label_width$}")),
                 count = horizontal_scale.get_count(**count, width_count),
                 bar = horizontal_scale.get_bar(**count)
             )?;
@@ -69,7 +69,7 @@ mod tests {
     fn test_common_terms_empty() {
         let terms = CommonTerms::new(10);
         Paint::disable();
-        let display = format!("{}", terms);
+        let display = format!("{terms}");
         assert_eq!(display, "No data\n");
     }
 
@@ -86,9 +86,9 @@ mod tests {
             terms.observe(String::from("barbar"));
         }
         Paint::disable();
-        let display = format!("{:10}", terms);
+        let display = format!("{terms:10}");
 
-        println!("{}", display);
+        println!("{display}");
         assert!(display.contains("[   foo] [100] ∎∎∎∎∎∎∎∎∎∎\n"));
         assert!(display.contains("[barbar] [ 20] ∎∎\n"));
         assert!(!display.contains("arr"));

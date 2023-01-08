@@ -98,7 +98,7 @@ mod tests {
     fn test_display() {
         let stats = Stats::new(&[1.1, 3.3, 2.2], Some(3));
         Paint::disable();
-        let display = format!("{}", stats);
+        let display = format!("{stats}");
         assert!(display.contains("Samples = 3"));
         assert!(display.contains("Min = 1.100"));
         assert!(display.contains("Max = 3.300"));
@@ -109,7 +109,7 @@ mod tests {
     fn test_big_num() {
         let stats = Stats::new(&[123456789.1234, 123456788.1234], None);
         Paint::disable();
-        let display = format!("{}", stats);
+        let display = format!("{stats}");
         assert!(display.contains("Samples = 2"));
         assert!(display.contains("Min = 123456788.123"));
         assert!(display.contains("Max = 123456789.123"));
