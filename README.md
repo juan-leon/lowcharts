@@ -86,6 +86,8 @@ each ∎ represents a count of 228
 [0.044 .. 0.049] [  183]
 ```
 
+Command supports a `--log-scale` flag to use a logarithmic scale.
+
 #### Time Histogram
 
 This chart is generated using  `strace -tt ls -lR * 2>&1 | lowcharts timehist --intervals 10`:
@@ -191,11 +193,13 @@ lowcharts = "*"
 Example:
 
 ```rust
-// use lowcharts::plot;
-let vec = &[-1.0, -1.1, 2.0, 2.0, 2.1, -0.9, 11.0, 11.2, 1.9, 1.99, 1.98, 1.97, 1.96];
+use lowcharts::plot;
+
+let vec = &[-1.0, -1.1, 2.0, 2.0, 2.1, -0.9, 11.0, 11.2, 1.9, 1.99];
 // Plot a histogram of the above vector, with 4 buckets and a precision
 // choosen by library
-let histogram = plot::Histogram::new(vec, 4, None);
+let options = plot::HistogramOptions { intervals: 4, ..Default::default() };
+let histogram = plot::Histogram::new(vec, options);
 print!("{}", histogram);
 ```
 

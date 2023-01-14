@@ -1,3 +1,10 @@
+0.5.8
+=====
+
+Features:
+
+* Support logarithmic scale in histograms via `--log-scale` flag.
+
 0.5.7
 =====
 

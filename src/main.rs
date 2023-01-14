@@ -114,6 +114,7 @@ fn histogram(matches: &ArgMatches) -> i32 {
     if precision_arg > 0 {
         options.precision = Some(precision_arg as usize);
     };
+    options.log_scale = matches.is_present("log-scale");
     options.intervals = matches.value_of_t("intervals").unwrap();
     let width = matches.value_of_t("width").unwrap();
     let histogram = plot::Histogram::new(&vec, options);

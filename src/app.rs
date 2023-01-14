@@ -105,12 +105,21 @@ fn add_precision(cmd: Command) -> Command {
     )
 }
 
+fn add_log_scale(cmd: Command) -> Command {
+    cmd.arg(
+        Arg::new("log-scale")
+            .long("log-scale")
+            .help("Use a logarithmic scale in buckets")
+            .takes_value(false),
+    )
+}
+
 pub fn get_app() -> Command<'static> {
     let mut hist = Command::new("hist")
         .version(clap::crate_version!())
         .about("Plot an histogram from input values");
     hist = add_input(add_regex(add_width(add_min_max(add_precision(
-        add_intervals(hist),
+        add_intervals(add_log_scale(hist)),
     )))));
 
     let mut plot = Command::new("plot")
