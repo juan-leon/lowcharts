@@ -285,7 +285,13 @@ mod tests {
     use super::*;
     use yansi::Color::Blue;
 
+    // `yansi::Paint::{enable,disable}` mutates global state; if we run
+    // `configure_output` (which calls `Paint::disable`) tests in parallel we
+    // may experience race conditions
+    use serial_test::serial;
+
     #[test]
+    #[serial]
     fn test_output_yes() {
         Paint::enable();
         configure_output("yes", true);
@@ -295,6 +301,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn test_output_no() {
         Paint::enable();
         configure_output("no", false);
@@ -304,6 +311,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn test_output_auto() {
         Paint::enable();
         env::set_var("TERM", "dumb");
