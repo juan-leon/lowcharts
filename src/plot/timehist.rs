@@ -85,7 +85,7 @@ impl TimeHistogram {
         } else {
             let x = (ts - self.min).num_microseconds().unwrap() as u64;
             if self.nanos == 0 {
-                // All timestamps are the same.  We will have a degenrate plot
+                // All timestamps are the same.  We will have a degenerate plot
                 // (as opposed to failing hard).
                 Some(0)
             } else {

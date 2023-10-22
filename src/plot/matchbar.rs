@@ -33,22 +33,22 @@ impl MatchBarRow {
 pub struct MatchBar {
     pub vec: Vec<MatchBarRow>,
     top_values: usize,
-    top_lenght: usize,
+    top_length: usize,
 }
 
 impl MatchBar {
     /// Creates a Histogram from a vector of `MatchBarRow` elements.
     pub fn new(vec: Vec<MatchBarRow>) -> Self {
-        let mut top_lenght: usize = 0;
+        let mut top_length: usize = 0;
         let mut top_values: usize = 0;
         for row in &vec {
-            top_lenght = top_lenght.max(row.label.len());
+            top_length = top_length.max(row.label.len());
             top_values = top_values.max(row.count);
         }
         Self {
             vec,
             top_values,
-            top_lenght,
+            top_length,
         }
     }
 }
@@ -71,7 +71,7 @@ impl fmt::Display for MatchBar {
             writeln!(
                 f,
                 "[{label}] [{count}] {bar}",
-                label = Blue.paint(format!("{:width$}", row.label, width = self.top_lenght)),
+                label = Blue.paint(format!("{:width$}", row.label, width = self.top_length)),
                 count = horizontal_scale.get_count(row.count, width_count),
                 bar = horizontal_scale.get_bar(row.count)
             )?;
@@ -95,7 +95,7 @@ mod tests {
         let mut row1 = MatchBarRow::new("label2");
         row1.inc_if_matches("label2");
         let mb = MatchBar::new(vec![row0, row1, MatchBarRow::new("label333")]);
-        assert_eq!(mb.top_lenght, 8);
+        assert_eq!(mb.top_length, 8);
         assert_eq!(mb.top_values, 3);
         Paint::disable();
         let display = format!("{mb}");
