@@ -197,7 +197,7 @@ use lowcharts::plot;
 
 let vec = &[-1.0, -1.1, 2.0, 2.0, 2.1, -0.9, 11.0, 11.2, 1.9, 1.99];
 // Plot a histogram of the above vector, with 4 buckets and a precision
-// choosen by library
+// chosen by library
 let options = plot::HistogramOptions { intervals: 4, ..Default::default() };
 let histogram = plot::Histogram::new(vec, options);
 print!("{}", histogram);

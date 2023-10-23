@@ -138,10 +138,10 @@ pub fn get_app() -> Command<'static> {
     let mut matches = Command::new("matches")
         .version(clap::crate_version!())
         .allow_missing_positional(true)
-        .about("Plot barchar with counts of occurences of matches params");
+        .about("Plot barchar with counts of occurrences of matches params");
     matches = add_input_as_option(add_width(matches)).arg(
         Arg::new("match")
-            .help("Count maches for those strings")
+            .help("Count matches for those strings")
             .required(true)
             .takes_value(true)
             .multiple_occurrences(true),
@@ -181,7 +181,7 @@ pub fn get_app() -> Command<'static> {
         );
     splittimehist = add_input_as_option(add_width(add_intervals(splittimehist))).arg(
         Arg::new("match")
-            .help("Count maches for those strings")
+            .help("Count matches for those strings")
             .required(true)
             .takes_value(true)
             .multiple_occurrences(true),

@@ -12,7 +12,7 @@ mod terms;
 mod timehist;
 mod xy;
 
-/// Returns a datetime formating string with a resolution that makes sense for a
+/// Returns a datetime formatting string with a resolution that makes sense for a
 /// given number of seconds
 fn date_fmt_string(seconds: i64) -> &'static str {
     match seconds {
