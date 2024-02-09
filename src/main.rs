@@ -105,7 +105,7 @@ fn histogram(matches: &ArgMatches) -> i32 {
         Ok(r) => r,
         _ => return 2,
     };
-    let vec = reader.read(matches.value_of("input").unwrap());
+    let mut vec = reader.read(matches.value_of("input").unwrap());
     if !assert_data(&vec, 1) {
         return 1;
     }
@@ -117,7 +117,7 @@ fn histogram(matches: &ArgMatches) -> i32 {
     options.log_scale = matches.is_present("log-scale");
     options.intervals = matches.value_of_t("intervals").unwrap();
     let width = matches.value_of_t("width").unwrap();
-    let histogram = plot::Histogram::new(&vec, options);
+    let histogram = plot::Histogram::new(&mut vec, options);
     print!("{histogram:width$}");
     0
 }

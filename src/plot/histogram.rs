@@ -54,7 +54,7 @@ impl Histogram {
     ///
     /// `options` is a `HistogramOptions` struct with the preferences to create
     /// histogram.
-    pub fn new(vec: &[f64], mut options: HistogramOptions) -> Self {
+    pub fn new(vec: &mut [f64], mut options: HistogramOptions) -> Self {
         let mut stats = Stats::new(vec, options.precision);
         if options.log_scale {
             stats.min = 0.0; // We will silently discard negative values
@@ -222,7 +222,7 @@ mod tests {
 
     #[test]
     fn test_buckets() {
-        let stats = Stats::new(&[-2.0, 14.0], None);
+        let stats = Stats::new(&mut [-2.0, 14.0], None);
         let options = HistogramOptions {
             intervals: 8,
             ..Default::default()
@@ -247,14 +247,14 @@ mod tests {
             intervals: 6,
             ..Default::default()
         };
-        let mut hist = Histogram::new_with_stats(Stats::new(&[-2.0, 4.0], None), &options);
+        let mut hist = Histogram::new_with_stats(Stats::new(&mut [-2.0, 4.0], None), &options);
         hist.load(&[-1.0, 2.0, -1.0, 2.0, 10.0, 10.0, 10.0, -10.0]);
         assert_eq!(hist.top, 2);
     }
 
     #[test]
     fn display_test() {
-        let stats = Stats::new(&[-2.0, 14.0], None);
+        let stats = Stats::new(&mut [-2.0, 14.0], None);
         let options = HistogramOptions {
             intervals: 8,
             precision: Some(3),
@@ -280,7 +280,7 @@ mod tests {
             precision: Some(3),
             ..Default::default()
         };
-        let mut hist = Histogram::new_with_stats(Stats::new(&[-2.0, 14.0], None), &options);
+        let mut hist = Histogram::new_with_stats(Stats::new(&mut [-2.0, 14.0], None), &options);
         hist.load(&[
             -1.0, -1.1, 2.0, 2.0, 2.1, -0.9, 11.0, 11.2, 1.9, 1.99, 1.98, 1.97, 1.96,
         ]);
@@ -291,7 +291,7 @@ mod tests {
 
     #[test]
     fn display_test_human_units() {
-        let vector = &[
+        let vector = &mut [
             -1.0,
             -12000000.0,
             -12000001.0,
@@ -320,7 +320,7 @@ mod tests {
     #[test]
     fn display_test_log_scale() {
         let hist = Histogram::new(
-            &[0.4, 0.4, 0.4, 0.4, 255.0, 0.2, 1.2, 128.0, 126.0, -7.0],
+            &mut [0.4, 0.4, 0.4, 0.4, 255.0, 0.2, 1.2, 128.0, 126.0, -7.0],
             HistogramOptions {
                 intervals: 8,
                 log_scale: true,
@@ -402,7 +402,7 @@ mod tests {
             intervals: 8,
             ..Default::default()
         };
-        let hist = Histogram::new_with_stats(Stats::new(&[-12.0, 4.0], None), &options);
+        let hist = Histogram::new_with_stats(Stats::new(&mut [-12.0, 4.0], None), &options);
         assert!(hist.find_slot(-13.0) == None);
         assert!(hist.find_slot(13.0) == None);
         assert!(hist.find_slot(-12.0) == Some(0));
@@ -416,7 +416,7 @@ mod tests {
     fn find_slot_logarithmic() {
         let hist = Histogram::new(
             // More than 8 values to avoid interval truncation
-            &[255.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, -2000.0],
+            &mut [255.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, -2000.0],
             HistogramOptions {
                 intervals: 8,
                 log_scale: true,
