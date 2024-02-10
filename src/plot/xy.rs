@@ -33,7 +33,12 @@ impl XyPlot {
     /// "None" is used, human units will be used, with an heuristic based on the
     /// input data for deciding the units and the decimal places.
     pub fn new(vec: &[f64], width: usize, height: usize, precision: Option<usize>) -> Self {
-        let mut plot = Self::new_with_stats(width, height, Stats::new(vec.to_vec().borrow_mut(), precision), precision);
+        let mut plot = Self::new_with_stats(
+            width,
+            height,
+            Stats::new(vec.to_vec().borrow_mut(), precision),
+            precision,
+        );
         plot.load(vec);
         plot
     }

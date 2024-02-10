@@ -115,8 +115,8 @@ impl fmt::Display for Stats {
 mod tests {
     use super::*;
     use float_eq::assert_float_eq;
-    use yansi::Paint;
     use rand::{seq::SliceRandom, thread_rng};
+    use yansi::Paint;
 
     #[test]
     fn basic_test() {
