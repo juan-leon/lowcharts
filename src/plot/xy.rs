@@ -1,3 +1,4 @@
+use std::borrow::BorrowMut;
 use std::fmt;
 use std::ops::Range;
 
@@ -32,7 +33,12 @@ impl XyPlot {
     /// "None" is used, human units will be used, with an heuristic based on the
     /// input data for deciding the units and the decimal places.
     pub fn new(vec: &[f64], width: usize, height: usize, precision: Option<usize>) -> Self {
-        let mut plot = Self::new_with_stats(width, height, Stats::new(vec, precision), precision);
+        let mut plot = Self::new_with_stats(
+            width,
+            height,
+            Stats::new(vec.to_vec().borrow_mut(), precision),
+            precision,
+        );
         plot.load(vec);
         plot
     }
@@ -132,7 +138,7 @@ mod tests {
 
     #[test]
     fn basic_test() {
-        let stats = Stats::new(&[-1.0, 4.0], None);
+        let stats = Stats::new(&mut [-1.0, 4.0], None);
         let mut plot = XyPlot::new_with_stats(3, 5, stats, Some(3));
         plot.load(&[-1.0, 0.0, 1.0, 2.0, 3.0, 4.0, -1.0]);
         assert_float_eq!(plot.x_axis[0], -0.5, rmax <= f64::EPSILON);
@@ -146,7 +152,7 @@ mod tests {
 
     #[test]
     fn display_test() {
-        let stats = Stats::new(&[-1.0, 4.0], None);
+        let stats = Stats::new(&mut [-1.0, 4.0], None);
         let mut plot = XyPlot::new_with_stats(3, 5, stats, Some(3));
         plot.load(&[-1.0, 0.0, 1.0, 2.0, 3.0, 4.0, -1.0]);
         Paint::disable();
@@ -159,7 +165,7 @@ mod tests {
 
     #[test]
     fn display_test_human_units() {
-        let vector = &[1000000.0, -1000000.0, -2000000.0, -4000000.0];
+        let vector = &mut [1000000.0, -1000000.0, -2000000.0, -4000000.0];
         let plot = XyPlot::new(vector, 3, 5, None);
         Paint::disable();
         let display = format!("{plot}");
