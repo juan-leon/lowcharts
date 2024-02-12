@@ -150,14 +150,14 @@ jobs:
         echo "DEB_PATH=${DEB_PATH}" >> $GITHUB_OUTPUT
 
     - name: "Artifact upload: tarball"
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: ${{ steps.package.outputs.PKG_NAME }}
         path: ${{ steps.package.outputs.PKG_PATH }}
         if-no-files-found: error
 
     - name: "Artifact upload: Debian package"
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       if: steps.debian-package.outputs.DEB_NAME
       with:
         name: ${{ steps.debian-package.outputs.DEB_NAME }}
