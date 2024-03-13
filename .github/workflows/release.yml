@@ -165,7 +165,7 @@ jobs:
         if-no-files-found: error
 
     - name: Publish archives and packages
-      uses: softprops/action-gh-release@v1
+      uses: softprops/action-gh-release@v2
       with:
         files: |
           ${{ steps.package.outputs.PKG_PATH }}
