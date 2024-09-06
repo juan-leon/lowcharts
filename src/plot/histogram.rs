@@ -36,7 +36,7 @@ pub struct Histogram {
 }
 
 /// A struct holding data to plot a Histogram of numerical data.
-#[derive(Default)]
+#[derive(Clone, Default)]
 pub struct HistogramOptions {
     /// `intervals` is the number of histogram buckets to display (capped to the
     /// length of input data).
