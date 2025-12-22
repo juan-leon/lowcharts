@@ -115,7 +115,7 @@ impl fmt::Display for Stats {
 mod tests {
     use super::*;
     use float_eq::assert_float_eq;
-    use rand::{seq::SliceRandom, thread_rng};
+    use rand::{rng, seq::SliceRandom};
     use yansi::Paint;
 
     #[test]
@@ -153,7 +153,7 @@ mod tests {
     #[test]
     fn test_percentile() {
         let mut vec: Vec<f64> = (0..100).map(|i| i as f64).collect();
-        vec.shuffle(&mut thread_rng());
+        vec.shuffle(&mut rng());
         let stats = Stats::new(&mut vec, Some(1));
         Paint::disable();
         let display = format!("{stats}");
