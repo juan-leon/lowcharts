@@ -1,6 +1,6 @@
 use std::fmt;
 
-use yansi::Color::Blue;
+use yansi::Paint;
 
 use crate::format::F64Formatter;
 
@@ -89,24 +89,24 @@ impl fmt::Display for Stats {
         writeln!(
             f,
             "Samples = {len}; Min = {min}; Max = {max}",
-            len = Blue.paint(self.samples.to_string()),
-            min = Blue.paint(formatter.format(self.min)),
-            max = Blue.paint(formatter.format(self.max)),
+            len = self.samples.to_string().blue(),
+            min = formatter.format(self.min).blue(),
+            max = formatter.format(self.max).blue(),
         )?;
         writeln!(
             f,
             "Average = {avg}; Variance = {var}; STD = {std}",
-            avg = Blue.paint(formatter.format(self.avg)),
-            var = Blue.paint(format!("{:.3}", self.var)),
-            std = Blue.paint(format!("{:.3}", self.std)),
+            avg = formatter.format(self.avg).blue(),
+            var = format!("{:.3}", self.var).blue(),
+            std = format!("{:.3}", self.std).blue(),
         )?;
         writeln!(
             f,
             "p50 = {p50}; p90 = {p90}; p95 = {p95}; p99 = {p99}",
-            p50 = Blue.paint(formatter.format(self.p50)),
-            p90 = Blue.paint(formatter.format(self.p90)),
-            p95 = Blue.paint(formatter.format(self.p95)),
-            p99 = Blue.paint(formatter.format(self.p99)),
+            p50 = formatter.format(self.p50).blue(),
+            p90 = formatter.format(self.p90).blue(),
+            p95 = formatter.format(self.p95).blue(),
+            p99 = formatter.format(self.p99).blue(),
         )
     }
 }
@@ -116,7 +116,7 @@ mod tests {
     use super::*;
     use float_eq::assert_float_eq;
     use rand::{rng, seq::SliceRandom};
-    use yansi::Paint;
+    use yansi;
 
     #[test]
     fn basic_test() {
@@ -132,7 +132,7 @@ mod tests {
     #[test]
     fn test_display() {
         let stats = Stats::new(&mut [1.1, 3.3, 2.2], Some(3));
-        Paint::disable();
+        yansi::disable();
         let display = format!("{stats}");
         assert!(display.contains("Samples = 3"));
         assert!(display.contains("Min = 1.100"));
@@ -143,7 +143,7 @@ mod tests {
     #[test]
     fn test_big_num() {
         let stats = Stats::new(&mut [123456789.1234, 123456788.1234], None);
-        Paint::disable();
+        yansi::disable();
         let display = format!("{stats}");
         assert!(display.contains("Samples = 2"));
         assert!(display.contains("Min = 123456788.123"));
@@ -155,7 +155,7 @@ mod tests {
         let mut vec: Vec<f64> = (0..100).map(|i| i as f64).collect();
         vec.shuffle(&mut rng());
         let stats = Stats::new(&mut vec, Some(1));
-        Paint::disable();
+        yansi::disable();
         let display = format!("{stats}");
         println!("{}", display);
         assert!(display.contains("p50 = 50.0"));

@@ -1,7 +1,7 @@
 use std::fmt;
 use std::ops::Range;
 
-use yansi::Color::Blue;
+use yansi::Paint;
 
 use crate::format::{F64Formatter, HorizontalScale};
 use crate::stats::Stats;
@@ -186,12 +186,13 @@ impl HistWriter {
         writeln!(
             f,
             "[{range}] [{count}] {bar}",
-            range = Blue.paint(format!(
+            range = format!(
                 "{:>width$} .. {:>width$}",
                 self.formatter.format(bucket.range.start),
                 self.formatter.format(bucket.range.end),
                 width = width,
-            )),
+            )
+            .blue(),
             count = horizontal_scale.get_count(bucket.count, width_count),
             bar = horizontal_scale.get_bar(bucket.count)
         )
@@ -218,7 +219,7 @@ impl HistWriter {
 mod tests {
     use super::*;
     use float_eq::assert_float_eq;
-    use yansi::Paint;
+    use yansi;
 
     #[test]
     fn test_buckets() {
@@ -264,7 +265,7 @@ mod tests {
         hist.load(&[
             -1.0, -1.1, 2.0, 2.0, 2.1, -0.9, 11.0, 11.2, 1.9, 1.99, 1.98, 1.97, 1.96,
         ]);
-        Paint::disable();
+        yansi::disable();
         let display = format!("{hist}");
         assert!(display.contains("[-2.000 ..  0.000] [3] ∎∎∎\n"));
         assert!(display.contains("[ 0.000 ..  2.000] [5] ∎∎∎∎∎\n"));
@@ -284,7 +285,7 @@ mod tests {
         hist.load(&[
             -1.0, -1.1, 2.0, 2.0, 2.1, -0.9, 11.0, 11.2, 1.9, 1.99, 1.98, 1.97, 1.96,
         ]);
-        Paint::disable();
+        yansi::disable();
         let display = format!("{hist:2}");
         assert!(display.contains("[-2.000 ..  0.000] [3] ∎∎∎\n"));
     }
@@ -308,7 +309,7 @@ mod tests {
                 ..Default::default()
             },
         );
-        Paint::disable();
+        yansi::disable();
         let display = format!("{hist}");
         assert!(display.contains("[-12.0 M .. -10.4 M] [4] ∎∎∎∎\n"));
         assert!(display.contains("[ -2.6 M ..  -1.1 M] [1] ∎\n"));
@@ -327,7 +328,7 @@ mod tests {
                 ..Default::default()
             },
         );
-        Paint::disable();
+        yansi::disable();
         let display = format!("{hist}");
         assert!(display.contains("[  0.00 ..   1.00] [5] ∎∎∎∎∎\n"));
         assert!(display.contains("[  1.00 ..   3.00] [1] ∎\n"));

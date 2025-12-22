@@ -25,7 +25,7 @@ depends = ""
 
 
 [dependencies]
-yansi = "^0"
+yansi = "^1"
 atty = "^0"
 derive_builder = "^0"
 regex = "^1.9"

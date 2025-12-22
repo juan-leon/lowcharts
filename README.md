@@ -206,8 +206,8 @@ print!("{}", histogram);
 You can disable coloring by doing:
 
 ```rust
-// use yansi::Paint;
-Paint::disable();
+// use use yansi;
+yansi::disable();
 ```
 
 You can find the documentation [here](https://docs.rs/lowcharts/latest/lowcharts/).

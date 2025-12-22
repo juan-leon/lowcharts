@@ -14,7 +14,6 @@ use chrono::Duration;
 use clap::ArgMatches;
 use regex::Regex;
 use simplelog::{ColorChoice, ConfigBuilder, LevelFilter, TermLogger, TerminalMode};
-use yansi::Paint;
 
 /// True if vec has al least 'min' elements
 fn assert_data<T>(vec: &[T], min: usize) -> bool {
@@ -30,14 +29,14 @@ fn configure_output(option: &str, verbose: bool) {
     let mut color_choice = ColorChoice::Auto;
     match option {
         "no" => {
-            Paint::disable();
+            yansi::disable();
             color_choice = ColorChoice::Never;
         }
         "auto" => match env::var("TERM") {
-            Ok(value) if value == "dumb" => Paint::disable(),
+            Ok(value) if value == "dumb" => yansi::disable(),
             _ => {
                 if atty::isnt(atty::Stream::Stdout) {
-                    Paint::disable();
+                    yansi::disable();
                 }
             }
         },
@@ -292,6 +291,7 @@ fn main() {
 mod tests {
     use super::*;
     use yansi::Color::Blue;
+    use yansi::Paint;
 
     // `yansi::Paint::{enable,disable}` mutates global state; if we run
     // `configure_output` (which calls `Paint::disable`) tests in parallel we
@@ -301,9 +301,9 @@ mod tests {
     #[test]
     #[serial]
     fn test_output_yes() {
-        Paint::enable();
+        yansi::enable();
         configure_output("yes", true);
-        let display = format!("{}", Blue.paint("blue"));
+        let display = format!("{}", "blue".paint(Blue));
         assert_eq!("\u{1b}[34mblue\u{1b}[0m", display);
         assert_eq!(LevelFilter::Debug, log::max_level());
     }
@@ -311,9 +311,9 @@ mod tests {
     #[test]
     #[serial]
     fn test_output_no() {
-        Paint::enable();
+        yansi::enable();
         configure_output("no", false);
-        let display = format!("{}", Blue.paint("blue"));
+        let display = format!("{}", "blue".paint(Blue));
         assert_eq!("blue", display);
         assert_eq!(LevelFilter::Info, log::max_level());
     }
@@ -321,10 +321,10 @@ mod tests {
     #[test]
     #[serial]
     fn test_output_auto() {
-        Paint::enable();
+        yansi::enable();
         env::set_var("TERM", "dumb");
         configure_output("auto", false);
-        let display = format!("{}", Blue.paint("blue"));
+        let display = format!("{}", "blue".paint(Blue));
         assert_eq!("blue", display);
     }
 

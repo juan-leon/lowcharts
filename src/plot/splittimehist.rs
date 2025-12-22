@@ -2,6 +2,7 @@ use std::fmt;
 
 use chrono::{DateTime, Duration, FixedOffset};
 use yansi::Color::{Blue, Cyan, Green, Magenta, Red};
+use yansi::Paint;
 
 use crate::format::{HorizontalScale, BAR_CHAR};
 use crate::plot::date_fmt_string;
@@ -111,16 +112,12 @@ impl SplitTimeHistogram {
         widths: &[usize],
         ts_fmt: &str,
     ) -> fmt::Result {
-        write!(
-            f,
-            "[{}] [",
-            Blue.paint(format!("{}", row.start.format(ts_fmt)))
-        )?;
+        write!(f, "[{}] [", format!("{}", row.start.format(ts_fmt)).blue())?;
         for i in 0..self.strings.len() {
             write!(
                 f,
                 "{}",
-                COLORS[i].paint(format!("{:width$}", row.count[i], width = widths[i]))
+                format!("{:width$}", row.count[i], width = widths[i]).paint(COLORS[i])
             )?;
             if i < self.strings.len() - 1 {
                 write!(f, "/")?;
@@ -131,7 +128,10 @@ impl SplitTimeHistogram {
             write!(
                 f,
                 "{}",
-                COLORS[i].paint(BAR_CHAR.repeat(row.count[i] / divisor).to_string())
+                BAR_CHAR
+                    .repeat(row.count[i] / divisor)
+                    .to_string()
+                    .paint(COLORS[i])
             )?;
         }
         writeln!(f)
@@ -158,7 +158,7 @@ impl fmt::Display for SplitTimeHistogram {
         writeln!(f, "Matches: {total}.")?;
         for (i, s) in self.strings.iter().enumerate() {
             let total = self.vec.iter().map(|r| r.count[i]).sum::<usize>();
-            writeln!(f, "{}: {total}.", COLORS[i].paint(s))?;
+            writeln!(f, "{}: {total}.", s.paint(COLORS[i]))?;
         }
         writeln!(f, "{horizontal_scale}")?;
         let ts_fmt = date_fmt_string(self.step.num_seconds());
@@ -172,11 +172,11 @@ impl fmt::Display for SplitTimeHistogram {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use yansi::Paint;
+    use yansi;
 
     #[test]
     fn test_big_time_interval() {
-        Paint::disable();
+        yansi::disable();
         let mut vec = vec![
             (
                 DateTime::parse_from_rfc3339("2021-04-15T04:25:00+00:00").unwrap(),

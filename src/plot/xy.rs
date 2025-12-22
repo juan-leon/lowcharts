@@ -2,7 +2,7 @@ use std::borrow::BorrowMut;
 use std::fmt;
 use std::ops::Range;
 
-use yansi::Color::{Blue, Red};
+use yansi::Paint;
 
 use crate::format::F64Formatter;
 use crate::stats::Stats;
@@ -121,12 +121,8 @@ fn print_line(
     writeln!(
         f,
         "[{}] {}",
-        Blue.paint(format!(
-            "{:>width$}",
-            f64fmt.format(range.start),
-            width = y_width
-        )),
-        Red.paint(row),
+        format!("{:>width$}", f64fmt.format(range.start), width = y_width).blue(),
+        row.red(),
     )
 }
 
@@ -134,7 +130,7 @@ fn print_line(
 mod tests {
     use super::*;
     use float_eq::assert_float_eq;
-    use yansi::Paint;
+    use yansi;
 
     #[test]
     fn basic_test() {
@@ -155,7 +151,7 @@ mod tests {
         let stats = Stats::new(&mut [-1.0, 4.0], None);
         let mut plot = XyPlot::new_with_stats(3, 5, stats, Some(3));
         plot.load(&[-1.0, 0.0, 1.0, 2.0, 3.0, 4.0, -1.0]);
-        Paint::disable();
+        yansi::disable();
         let display = format!("{plot}");
         assert!(display.contains("[ 3.000]   ● "));
         assert!(display.contains("[ 2.000]     "));
@@ -167,7 +163,7 @@ mod tests {
     fn display_test_human_units() {
         let vector = &mut [1000000.0, -1000000.0, -2000000.0, -4000000.0];
         let plot = XyPlot::new(vector, 3, 5, None);
-        Paint::disable();
+        yansi::disable();
         let display = format!("{plot}");
         assert!(display.contains("[    0 K] ●   "));
         assert!(display.contains("[-1000 K]  ●  "));

@@ -1,7 +1,6 @@
 use std::fmt;
 use std::ops::Range;
 
-use yansi::Color::{Blue, Green, Red};
 use yansi::Paint;
 
 // Units-based suffixes for human formatting.
@@ -80,12 +79,12 @@ impl HorizontalScale {
         }
     }
 
-    pub fn get_bar(&self, units: usize) -> Paint<String> {
-        Red.paint(format!("{:∎<width$}", "", width = units / self.scale))
+    pub fn get_bar(&self, units: usize) -> yansi::Painted<String> {
+        yansi::Paint::new(format!("{:∎<width$}", "", width = units / self.scale)).red()
     }
 
-    pub fn get_count(&self, units: usize, width: usize) -> Paint<String> {
-        Green.paint(format!("{units:width$}"))
+    pub fn get_count(&self, units: usize, width: usize) -> yansi::Painted<String> {
+        yansi::Paint::new(format!("{units:width$}")).green()
     }
 
     pub fn get_scale(&self) -> usize {
@@ -98,8 +97,8 @@ impl fmt::Display for HorizontalScale {
         writeln!(
             formatter,
             "Each {} represents a count of {}",
-            Red.paint(BAR_CHAR),
-            Blue.paint(self.scale.to_string()),
+            BAR_CHAR.red(),
+            self.scale.to_string().blue(),
         )
     }
 }
@@ -107,6 +106,7 @@ impl fmt::Display for HorizontalScale {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use yansi;
     use yansi::Paint;
 
     #[test]
@@ -200,7 +200,7 @@ mod tests {
 
     #[test]
     fn test_horizontal_scale() {
-        Paint::disable();
+        yansi::disable();
         assert_eq!(
             format!("{}", HorizontalScale::new(123)),
             format!("Each {BAR_CHAR} represents a count of 123\n")
@@ -209,7 +209,7 @@ mod tests {
 
     #[test]
     fn test_horizontal_scale_with_zero_scale() {
-        Paint::disable();
+        yansi::disable();
         let scale = HorizontalScale::new(0);
         assert_eq!(scale.get_scale(), 1);
         assert_eq!(
@@ -221,15 +221,20 @@ mod tests {
     #[test]
     fn test_horizontal_scale_bar() {
         let scale = HorizontalScale::new(10);
+        yansi::disable();
         assert_eq!(
-            scale.get_bar(80),
-            Red.paint(format!("{:∎<width$}", "", width = 8))
+            format!("{}", scale.get_bar(80)),
+            format!("{}", format!("{:∎<width$}", "", width = 8).red())
         );
     }
 
     #[test]
     fn test_horizontal_scale_count() {
         let scale = HorizontalScale::new(10);
-        assert_eq!(scale.get_count(80, 5), Green.paint("   80".to_string()));
+        yansi::disable();
+        assert_eq!(
+            format!("{}", scale.get_count(80, 5)),
+            format!("{}", "   80".to_string().green())
+        );
     }
 }

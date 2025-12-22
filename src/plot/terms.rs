@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use std::fmt;
 
-use yansi::Color::Blue;
+use yansi::Paint;
 
 use crate::format::HorizontalScale;
 
@@ -51,7 +51,7 @@ impl fmt::Display for CommonTerms {
             writeln!(
                 f,
                 "[{label}] [{count}] {bar}",
-                label = Blue.paint(format!("{term:>label_width$}")),
+                label = format!("{term:>label_width$}").blue(),
                 count = horizontal_scale.get_count(**count, width_count),
                 bar = horizontal_scale.get_bar(**count)
             )?;
@@ -63,12 +63,12 @@ impl fmt::Display for CommonTerms {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use yansi::Paint;
+    use yansi;
 
     #[test]
     fn test_common_terms_empty() {
         let terms = CommonTerms::new(10);
-        Paint::disable();
+        yansi::disable();
         let display = format!("{terms}");
         assert_eq!(display, "No data\n");
     }
@@ -85,7 +85,7 @@ mod tests {
         for _ in 0..20 {
             terms.observe(String::from("barbar"));
         }
-        Paint::disable();
+        yansi::disable();
         let display = format!("{terms:10}");
 
         println!("{display}");

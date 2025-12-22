@@ -1,6 +1,6 @@
 use std::fmt;
 
-use yansi::Color::Blue;
+use yansi::Paint;
 
 use crate::format::HorizontalScale;
 
@@ -61,17 +61,14 @@ impl fmt::Display for MatchBar {
         writeln!(
             f,
             "Matches: {}.",
-            Blue.paint(format!(
-                "{}",
-                self.vec.iter().map(|r| r.count).sum::<usize>()
-            )),
+            format!("{}", self.vec.iter().map(|r| r.count).sum::<usize>()).blue(),
         )?;
         writeln!(f, "{horizontal_scale}")?;
         for row in &self.vec {
             writeln!(
                 f,
                 "[{label}] [{count}] {bar}",
-                label = Blue.paint(format!("{:width$}", row.label, width = self.top_length)),
+                label = format!("{:width$}", row.label, width = self.top_length).blue(),
                 count = horizontal_scale.get_count(row.count, width_count),
                 bar = horizontal_scale.get_bar(row.count)
             )?;
@@ -83,7 +80,7 @@ impl fmt::Display for MatchBar {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use yansi::Paint;
+    use yansi;
 
     #[test]
     fn test_matchbar() {
@@ -97,7 +94,7 @@ mod tests {
         let mb = MatchBar::new(vec![row0, row1, MatchBarRow::new("label333")]);
         assert_eq!(mb.top_length, 8);
         assert_eq!(mb.top_values, 3);
-        Paint::disable();
+        yansi::disable();
         let display = format!("{mb}");
 
         assert!(display.contains("[label1  ] [3] ∎∎∎\n"));

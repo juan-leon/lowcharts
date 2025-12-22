@@ -1,7 +1,7 @@
 use std::fmt;
 
 use chrono::{DateTime, Duration, FixedOffset};
-use yansi::Color::Blue;
+use yansi::Paint;
 
 use crate::format::HorizontalScale;
 use crate::plot::date_fmt_string;
@@ -103,10 +103,7 @@ impl fmt::Display for TimeHistogram {
         writeln!(
             f,
             "Matches: {}.",
-            Blue.paint(format!(
-                "{}",
-                self.vec.iter().map(|r| r.count).sum::<usize>()
-            )),
+            format!("{}", self.vec.iter().map(|r| r.count).sum::<usize>()).blue(),
         )?;
         writeln!(f, "{horizontal_scale}")?;
         let ts_fmt = date_fmt_string(self.step.num_seconds());
@@ -114,7 +111,7 @@ impl fmt::Display for TimeHistogram {
             writeln!(
                 f,
                 "[{label}] [{count}] {bar}",
-                label = Blue.paint(format!("{}", row.start.format(ts_fmt))),
+                label = format!("{}", row.start.format(ts_fmt)).blue(),
                 count = horizontal_scale.get_count(row.count, width_count),
                 bar = horizontal_scale.get_bar(row.count)
             )?;
@@ -126,11 +123,11 @@ impl fmt::Display for TimeHistogram {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use yansi::Paint;
+    use yansi;
 
     #[test]
     fn test_big_time_interval() {
-        Paint::disable();
+        yansi::disable();
         let vec = vec![
             DateTime::parse_from_rfc3339("2021-04-15T04:25:00+00:00").unwrap(),
             DateTime::parse_from_rfc3339("2022-04-15T04:25:00+00:00").unwrap(),
@@ -149,7 +146,7 @@ mod tests {
 
     #[test]
     fn test_small_time_interval() {
-        Paint::disable();
+        yansi::disable();
         let vec = vec![
             DateTime::parse_from_rfc3339("2022-04-15T04:25:00.001+00:00").unwrap(),
             DateTime::parse_from_rfc3339("2022-04-15T04:25:00.002+00:00").unwrap(),
@@ -167,7 +164,7 @@ mod tests {
 
     #[test]
     fn test_single_timestamp() {
-        Paint::disable();
+        yansi::disable();
         let vec = vec![
             DateTime::parse_from_rfc3339("2022-04-15T04:25:00.001+00:00").unwrap(),
             DateTime::parse_from_rfc3339("2022-04-15T04:25:00.001+00:00").unwrap(),
