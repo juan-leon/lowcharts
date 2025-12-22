@@ -76,17 +76,17 @@ fn parse_duration(duration: &str) -> Result<Duration, humantime::DurationError> 
 /// from an input source.
 fn get_float_reader(matches: &ArgMatches) -> Result<read::DataReader, ()> {
     let mut builder = read::DataReaderBuilder::default();
-    if matches.is_present("min") || matches.is_present("max") {
-        let min = matches.value_of_t("min").unwrap_or(f64::NEG_INFINITY);
-        let max = matches.value_of_t("max").unwrap_or(f64::INFINITY);
+    if matches.contains_id("min") || matches.contains_id("max") {
+        let min = *matches.get_one::<f64>("min").unwrap_or(&f64::NEG_INFINITY);
+        let max = *matches.get_one::<f64>("max").unwrap_or(&f64::INFINITY);
         if min > max {
             error!("Minimum should be smaller than maximum");
             return Err(());
         }
         builder.range(min..max);
     }
-    if let Some(string) = matches.value_of("regex") {
-        match Regex::new(string) {
+    if let Some(string) = matches.get_one::<String>("regex") {
+        match Regex::new(string.as_str()) {
             Ok(re) => {
                 builder.regex(re);
             }
@@ -105,18 +105,18 @@ fn histogram(matches: &ArgMatches) -> i32 {
         Ok(r) => r,
         _ => return 2,
     };
-    let mut vec = reader.read(matches.value_of("input").unwrap());
+    let mut vec = reader.read(matches.get_one::<String>("input").unwrap().as_str());
     if !assert_data(&vec, 1) {
         return 1;
     }
     let mut options = plot::HistogramOptions::default();
-    let precision_arg: i32 = matches.value_of_t("precision").unwrap();
+    let precision_arg: i32 = *matches.get_one::<i32>("precision").unwrap();
     if precision_arg > 0 {
         options.precision = Some(precision_arg as usize);
     };
-    options.log_scale = matches.is_present("log-scale");
-    options.intervals = matches.value_of_t("intervals").unwrap();
-    let width = matches.value_of_t("width").unwrap();
+    options.log_scale = matches.get_flag("log-scale");
+    options.intervals = *matches.get_one::<usize>("intervals").unwrap();
+    let width = *matches.get_one::<usize>("width").unwrap();
     let histogram = plot::Histogram::new(&mut vec, options);
     print!("{histogram:width$}");
     0
@@ -128,11 +128,11 @@ fn plot(matches: &ArgMatches) -> i32 {
         Ok(r) => r,
         _ => return 2,
     };
-    let vec = reader.read(matches.value_of("input").unwrap());
+    let vec = reader.read(matches.get_one::<String>("input").unwrap().as_str());
     if !assert_data(&vec, 1) {
         return 1;
     }
-    let precision_arg: i32 = matches.value_of_t("precision").unwrap();
+    let precision_arg: i32 = *matches.get_one::<i32>("precision").unwrap();
     let precision = if precision_arg < 0 {
         None
     } else {
@@ -140,8 +140,8 @@ fn plot(matches: &ArgMatches) -> i32 {
     };
     let plot = plot::XyPlot::new(
         &vec,
-        matches.value_of_t("width").unwrap(),
-        matches.value_of_t("height").unwrap(),
+        *matches.get_one::<usize>("width").unwrap(),
+        *matches.get_one::<usize>("height").unwrap(),
         precision,
     );
     print!("{plot}");
@@ -151,12 +151,16 @@ fn plot(matches: &ArgMatches) -> i32 {
 /// Implements the matches cli-subcommand
 fn matchbar(matches: &ArgMatches) -> i32 {
     let reader = read::DataReader::default();
-    let width = matches.value_of_t("width").unwrap();
+    let width = *matches.get_one::<usize>("width").unwrap();
     print!(
         "{:width$}",
         reader.read_matches(
-            matches.value_of("input").unwrap(),
-            matches.values_of("match").unwrap().collect()
+            matches.get_one::<String>("input").unwrap().as_str(),
+            matches
+                .get_many::<String>("match")
+                .unwrap()
+                .map(|s| s.as_str())
+                .collect()
         ),
         width = width
     );
@@ -166,8 +170,8 @@ fn matchbar(matches: &ArgMatches) -> i32 {
 /// Implements the common-terms cli-subcommand
 fn common_terms(matches: &ArgMatches) -> i32 {
     let mut builder = read::DataReaderBuilder::default();
-    if let Some(string) = matches.value_of("regex") {
-        match Regex::new(string) {
+    if let Some(string) = matches.get_one::<String>("regex") {
+        match Regex::new(string.as_str()) {
             Ok(re) => {
                 builder.regex(re);
             }
@@ -180,15 +184,18 @@ fn common_terms(matches: &ArgMatches) -> i32 {
         builder.regex(Regex::new("(.*)").unwrap());
     };
     let reader = builder.build().unwrap();
-    let width = matches.value_of_t("width").unwrap();
-    let lines = matches.value_of_t("lines").unwrap();
+    let width = *matches.get_one::<usize>("width").unwrap();
+    let lines = *matches.get_one::<i32>("lines").unwrap();
     if lines < 1 {
         error!("You should specify a potitive number of lines");
         return 2;
     };
     print!(
         "{:width$}",
-        reader.read_terms(matches.value_of("input").unwrap(), lines),
+        reader.read_terms(
+            matches.get_one::<String>("input").unwrap().as_str(),
+            lines as usize,
+        ),
         width = width
     );
     0
@@ -197,8 +204,8 @@ fn common_terms(matches: &ArgMatches) -> i32 {
 /// Implements the timehist cli-subcommand
 fn timehist(matches: &ArgMatches) -> i32 {
     let mut builder = read::TimeReaderBuilder::default();
-    if let Some(string) = matches.value_of("regex") {
-        match Regex::new(string) {
+    if let Some(string) = matches.get_one::<String>("regex") {
+        match Regex::new(string.as_str()) {
             Ok(re) => {
                 builder.regex(re);
             }
@@ -208,12 +215,12 @@ fn timehist(matches: &ArgMatches) -> i32 {
             }
         };
     }
-    if let Some(as_str) = matches.value_of("format") {
+    if let Some(as_str) = matches.get_one::<String>("format") {
         builder.ts_format(as_str.to_string());
     }
-    builder.early_stop(matches.is_present("early-stop"));
-    if let Some(duration) = matches.value_of("duration") {
-        match parse_duration(duration) {
+    builder.early_stop(matches.get_flag("early-stop"));
+    if let Some(duration) = matches.get_one::<String>("duration") {
+        match parse_duration(duration.as_str()) {
             Ok(d) => builder.duration(d),
             Err(err) => {
                 error!("Failed to parse duration {}: {}", duration, err);
@@ -221,11 +228,12 @@ fn timehist(matches: &ArgMatches) -> i32 {
             }
         };
     };
-    let width = matches.value_of_t("width").unwrap();
+    let width = *matches.get_one::<usize>("width").unwrap();
     let reader = builder.build().unwrap();
-    let vec = reader.read(matches.value_of("input").unwrap());
+    let vec = reader.read(matches.get_one::<String>("input").unwrap().as_str());
     if assert_data(&vec, 2) {
-        let timehist = plot::TimeHistogram::new(matches.value_of_t("intervals").unwrap(), &vec);
+        let timehist =
+            plot::TimeHistogram::new(*matches.get_one::<usize>("intervals").unwrap(), &vec);
         print!("{timehist:width$}");
     };
     0
@@ -234,7 +242,7 @@ fn timehist(matches: &ArgMatches) -> i32 {
 /// Implements the timehist cli-subcommand
 fn splittime(matches: &ArgMatches) -> i32 {
     let mut builder = read::SplitTimeReaderBuilder::default();
-    let string_list: Vec<String> = match matches.values_of("match") {
+    let string_list: Vec<String> = match matches.get_many::<String>("match") {
         Some(s) => s.map(|s| s.to_string()).collect(),
         None => {
             error!("At least a match is needed");
@@ -245,16 +253,16 @@ fn splittime(matches: &ArgMatches) -> i32 {
         error!("Only 5 different sub-groups are supported");
         return 2;
     }
-    if let Some(as_str) = matches.value_of("format") {
+    if let Some(as_str) = matches.get_one::<String>("format") {
         builder.ts_format(as_str.to_string());
     }
     builder.matches(string_list.iter().map(|s| s.to_string()).collect());
-    let width = matches.value_of_t("width").unwrap();
+    let width = *matches.get_one::<usize>("width").unwrap();
     let reader = builder.build().unwrap();
-    let vec = reader.read(matches.value_of("input").unwrap());
+    let vec = reader.read(matches.get_one::<String>("input").unwrap().as_str());
     if assert_data(&vec, 2) {
         let timehist = plot::SplitTimeHistogram::new(
-            matches.value_of_t("intervals").unwrap(),
+            *matches.get_one::<usize>("intervals").unwrap(),
             string_list,
             &vec,
         );
@@ -266,8 +274,8 @@ fn splittime(matches: &ArgMatches) -> i32 {
 fn main() {
     let matches = app::get_app().get_matches();
     configure_output(
-        matches.value_of("color").unwrap(),
-        matches.is_present("verbose"),
+        matches.get_one::<String>("color").unwrap().as_str(),
+        matches.get_flag("verbose"),
     );
     std::process::exit(match matches.subcommand() {
         Some(("hist", subcommand_matches)) => histogram(subcommand_matches),

@@ -1,4 +1,8 @@
-use clap::{self, Arg, Command};
+use clap::{
+    self,
+    builder::styling::{AnsiColor, Effects, Styles},
+    value_parser, Arg, ArgAction, Command,
+};
 
 fn add_input(cmd: Command) -> Command {
     cmd.arg(
@@ -15,7 +19,7 @@ fn add_input_as_option(cmd: Command) -> Command {
             .long("input")
             .default_value("-")
             .long_help("If not present or a single dash, standard input will be used")
-            .takes_value(true),
+            .value_parser(value_parser!(String)),
     )
 }
 
@@ -26,7 +30,7 @@ fn add_min_max(cmd: Command) -> Command {
             .short('M')
             .allow_hyphen_values(true)
             .help("Filter out values bigger than this")
-            .takes_value(true),
+            .value_parser(value_parser!(f64)),
     )
     .arg(
         Arg::new("min")
@@ -34,7 +38,7 @@ fn add_min_max(cmd: Command) -> Command {
             .short('m')
             .allow_hyphen_values(true)
             .help("Filter out values smaller than this")
-            .takes_value(true),
+            .value_parser(value_parser!(f64)),
     )
 }
 
@@ -58,7 +62,7 @@ the named one will be used).
             .short('R')
             .help("Use a regex to capture input values")
             .long_help(LONG_RE_ABOUT)
-            .takes_value(true),
+            .value_parser(value_parser!(String)),
     )
 }
 
@@ -68,7 +72,7 @@ fn add_non_capturing_regex(cmd: Command) -> Command {
             .long("regex")
             .short('R')
             .help("Filter out lines where regex is not present")
-            .takes_value(true),
+            .value_parser(value_parser!(String)),
     )
 }
 
@@ -79,7 +83,7 @@ fn add_width(cmd: Command) -> Command {
             .short('w')
             .help("Use this many characters as terminal width")
             .default_value("110")
-            .takes_value(true),
+            .value_parser(value_parser!(usize)),
     )
 }
 
@@ -90,7 +94,7 @@ fn add_intervals(cmd: Command) -> Command {
             .short('i')
             .help("Use no more than this amount of buckets to classify data")
             .default_value("20")
-            .takes_value(true),
+            .value_parser(value_parser!(usize)),
     )
 }
 
@@ -101,7 +105,7 @@ fn add_precision(cmd: Command) -> Command {
             .short('p')
             .help("Show that number of decimals (if omitted, 'human' units will be used)")
             .default_value("-1")
-            .takes_value(true),
+            .value_parser(value_parser!(i32)),
     )
 }
 
@@ -110,11 +114,11 @@ fn add_log_scale(cmd: Command) -> Command {
         Arg::new("log-scale")
             .long("log-scale")
             .help("Use a logarithmic scale in buckets")
-            .takes_value(false),
+            .action(ArgAction::SetTrue),
     )
 }
 
-pub fn get_app() -> Command<'static> {
+pub fn get_app() -> Command {
     let mut hist = Command::new("hist")
         .version(clap::crate_version!())
         .about("Plot an histogram from input values");
@@ -131,7 +135,7 @@ pub fn get_app() -> Command<'static> {
                 .short('H')
                 .help("Use that many `rows` for the plot")
                 .default_value("40")
-                .takes_value(true),
+                .value_parser(value_parser!(usize)),
         );
     plot = add_input(add_regex(add_width(add_min_max(add_precision(plot)))));
 
@@ -143,30 +147,34 @@ pub fn get_app() -> Command<'static> {
         Arg::new("match")
             .help("Count matches for those strings")
             .required(true)
-            .takes_value(true)
-            .multiple_occurrences(true),
+            .action(ArgAction::Append)
+            .num_args(1..),
     );
 
-    let mut timehist =
-        Command::new("timehist")
-            .version(clap::crate_version!())
-            .about("Plot histogram with amount of matches over time")
-            .arg(
-                Arg::new("format")
-                    .long("format")
-                    .short('f')
-                    .help("Use this string formatting")
-                    .takes_value(true),
-            )
-            .arg(
-                Arg::new("duration")
-                    .long("duration")
-                    .help("Cap the time interval at that duration (example: '3h 5min')")
-                    .takes_value(true),
-            )
-            .arg(Arg::new("early-stop").long("early-stop").help(
-                "If duration flag is used, assume monotonic times and stop as soon as possible",
-            ));
+    let mut timehist = Command::new("timehist")
+        .version(clap::crate_version!())
+        .about("Plot histogram with amount of matches over time")
+        .arg(
+            Arg::new("format")
+                .long("format")
+                .short('f')
+                .help("Use this string formatting")
+                .value_parser(value_parser!(String)),
+        )
+        .arg(
+            Arg::new("duration")
+                .long("duration")
+                .help("Cap the time interval at that duration (example: '3h 5min')")
+                .value_parser(value_parser!(String)),
+        )
+        .arg(
+            Arg::new("early-stop")
+                .long("early-stop")
+                .help(
+                    "If duration flag is used, assume monotonic times and stop as soon as possible",
+                )
+                .action(ArgAction::SetTrue),
+        );
     timehist = add_input(add_width(add_non_capturing_regex(add_intervals(timehist))));
 
     let mut splittimehist = Command::new("split-timehist")
@@ -177,14 +185,14 @@ pub fn get_app() -> Command<'static> {
                 .long("format")
                 .short('f')
                 .help("Use this string formatting")
-                .takes_value(true),
+                .value_parser(value_parser!(String)),
         );
     splittimehist = add_input_as_option(add_width(add_intervals(splittimehist))).arg(
         Arg::new("match")
             .help("Count matches for those strings")
             .required(true)
-            .takes_value(true)
-            .multiple_occurrences(true),
+            .action(ArgAction::Append)
+            .num_args(1..),
     );
 
     let mut common_terms = Command::new("common-terms")
@@ -196,13 +204,20 @@ pub fn get_app() -> Command<'static> {
             .short('l')
             .help("Display that many lines, sorting by most frequent")
             .default_value("10")
-            .takes_value(true),
+            .value_parser(value_parser!(i32)),
     );
 
     Command::new("lowcharts")
         .author(clap::crate_authors!())
         .version(clap::crate_version!())
         .about(clap::crate_description!())
+        .styles(
+            Styles::styled()
+                .header(AnsiColor::Red.on_default() | Effects::BOLD)
+                .usage(AnsiColor::Red.on_default() | Effects::BOLD)
+                .literal(AnsiColor::Blue.on_default() | Effects::BOLD)
+                .placeholder(AnsiColor::Green.on_default()),
+        )
         .max_term_width(100)
         .subcommand_required(true)
         .arg(
@@ -210,16 +225,16 @@ pub fn get_app() -> Command<'static> {
                 .short('c')
                 .long("color")
                 .help("Use colors in the output")
-                .possible_values(["auto", "no", "yes"])
+                .value_parser(["auto", "no", "yes"])
                 .default_value("auto")
-                .takes_value(true),
+                .value_parser(value_parser!(String)),
         )
         .arg(
             Arg::new("verbose")
                 .short('v')
                 .long("verbose")
                 .help("Be more verbose")
-                .takes_value(false),
+                .action(ArgAction::SetTrue),
         )
         .subcommand(hist)
         .subcommand(plot)
@@ -238,14 +253,14 @@ mod tests {
     fn hist_subcommand_arg_parsing() {
         let arg_vec = vec!["lowcharts", "--verbose", "hist", "foo"];
         let m = get_app().get_matches_from(arg_vec);
-        assert!(m.is_present("verbose"));
+        assert!(m.get_flag("verbose"));
         let sub_m = m.subcommand_matches("hist").unwrap();
-        assert_eq!("foo", sub_m.value_of("input").unwrap());
-        assert!(sub_m.value_of("max").is_none());
-        assert!(sub_m.value_of("min").is_none());
-        assert!(sub_m.value_of("regex").is_none());
-        assert_eq!("110", sub_m.value_of("width").unwrap());
-        assert_eq!("20", sub_m.value_of("intervals").unwrap());
+        assert_eq!("foo", sub_m.get_one::<String>("input").unwrap());
+        assert!(sub_m.get_one::<f64>("max").is_none());
+        assert!(sub_m.get_one::<f64>("min").is_none());
+        assert!(sub_m.get_one::<String>("regex").is_none());
+        assert_eq!(&110usize, sub_m.get_one::<usize>("width").unwrap());
+        assert_eq!(&20usize, sub_m.get_one::<usize>("intervals").unwrap());
     }
 
     #[test]
@@ -261,12 +276,12 @@ mod tests {
             "11",
         ];
         let m = get_app().get_matches_from(arg_vec);
-        assert!(!m.is_present("verbose"));
+        assert!(!m.get_flag("verbose"));
         let sub_m = m.subcommand_matches("plot").unwrap();
-        assert_eq!("-", sub_m.value_of("input").unwrap());
-        assert_eq!("1.1", sub_m.value_of("max").unwrap());
-        assert_eq!("0.9", sub_m.value_of("min").unwrap());
-        assert_eq!("11", sub_m.value_of("height").unwrap());
+        assert_eq!("-", sub_m.get_one::<String>("input").unwrap());
+        assert_eq!(&1.1f64, sub_m.get_one::<f64>("max").unwrap());
+        assert_eq!(&0.9f64, sub_m.get_one::<f64>("min").unwrap());
+        assert_eq!(&11usize, sub_m.get_one::<usize>("height").unwrap());
     }
 
     #[test]
@@ -274,18 +289,26 @@ mod tests {
         let arg_vec = vec!["lowcharts", "matches", "A", "B", "C"];
         let m = get_app().get_matches_from(arg_vec);
         let sub_m = m.subcommand_matches("matches").unwrap();
-        assert_eq!("-", sub_m.value_of("input").unwrap());
+        assert_eq!("-", sub_m.get_one::<String>("input").unwrap());
         assert_eq!(
             vec!["A", "B", "C"],
-            sub_m.values_of("match").unwrap().collect::<Vec<&str>>()
+            sub_m
+                .get_many::<String>("match")
+                .unwrap()
+                .map(|s| s.as_str())
+                .collect::<Vec<&str>>()
         );
         let arg_vec = vec!["lowcharts", "matches", "A", "--input", "B", "C"];
         let m = get_app().get_matches_from(arg_vec);
         let sub_m = m.subcommand_matches("matches").unwrap();
-        assert_eq!("B", sub_m.value_of("input").unwrap());
+        assert_eq!("B", sub_m.get_one::<String>("input").unwrap());
         assert_eq!(
             vec!["A", "C"],
-            sub_m.values_of("match").unwrap().collect::<Vec<&str>>()
+            sub_m
+                .get_many::<String>("match")
+                .unwrap()
+                .map(|s| s.as_str())
+                .collect::<Vec<&str>>()
         );
     }
 
@@ -294,8 +317,8 @@ mod tests {
         let arg_vec = vec!["lowcharts", "timehist", "--regex", "foo", "some"];
         let m = get_app().get_matches_from(arg_vec);
         let sub_m = m.subcommand_matches("timehist").unwrap();
-        assert_eq!("some", sub_m.value_of("input").unwrap());
-        assert_eq!("foo", sub_m.value_of("regex").unwrap());
+        assert_eq!("some", sub_m.get_one::<String>("input").unwrap());
+        assert_eq!("foo", sub_m.get_one::<String>("regex").unwrap());
     }
 
     #[test]
@@ -305,7 +328,11 @@ mod tests {
         let sub_m = m.subcommand_matches("split-timehist").unwrap();
         assert_eq!(
             vec!["foo", "bar"],
-            sub_m.values_of("match").unwrap().collect::<Vec<&str>>()
+            sub_m
+                .get_many::<String>("match")
+                .unwrap()
+                .map(|s| s.as_str())
+                .collect::<Vec<&str>>()
         );
     }
 
@@ -314,7 +341,7 @@ mod tests {
         let arg_vec = vec!["lowcharts", "common-terms", "--regex", "foo", "some"];
         let m = get_app().get_matches_from(arg_vec);
         let sub_m = m.subcommand_matches("common-terms").unwrap();
-        assert_eq!("some", sub_m.value_of("input").unwrap());
-        assert_eq!("foo", sub_m.value_of("regex").unwrap());
+        assert_eq!("some", sub_m.get_one::<String>("input").unwrap());
+        assert_eq!("foo", sub_m.get_one::<String>("regex").unwrap());
     }
 }

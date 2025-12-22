@@ -41,9 +41,21 @@ impl LogDateParser {
         // the 1st digit and then try to parse as much text as possible with any
         // of the "supported" formats (so that we do not lose precision digits
         // or TZ info).
-        for (i, c) in log_line.chars().enumerate() {
+        for (i, c) in log_line.char_indices() {
             if c.is_ascii_digit() {
-                for j in (i..(i + MAX_LEN).min(log_line.len() + 1)).rev() {
+                let mut end_positions: Vec<usize> = log_line[i..]
+                    .char_indices()
+                    .skip(1)
+                    .map(|(off, _)| i + off)
+                    .take(MAX_LEN)
+                    .collect();
+
+                let max_end = log_line.len();
+                if end_positions.last().copied().unwrap_or(i) != max_end {
+                    end_positions.push(max_end);
+                }
+
+                for j in end_positions.into_iter().rev() {
                     if let Some(parser) = Self::guess_parser(&log_line[i..j]) {
                         return Ok(Self {
                             range: i..j,

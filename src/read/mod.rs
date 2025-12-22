@@ -1,5 +1,5 @@
 pub use self::buckets::{DataReader, DataReaderBuilder};
-pub use self::splittimes::{SplitTimeReader, SplitTimeReaderBuilder};
+pub use self::splittimes::SplitTimeReaderBuilder;
 pub use self::times::TimeReaderBuilder;
 
 mod buckets;
